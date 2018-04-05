@@ -6,41 +6,45 @@ public class FirstPersonalControl : MonoBehaviour {
 
 	private CharacterController characterController;
 	private Transform cameraTransform;
-	private Animation sniperAnimation;
+	private Gun sniper;
+	private Gun submachineGun;
 	private float velocityY;
 	private const float gravity = -9.8f;
 	private const float maxVelocityY = 30.0f;
 	private const float walkVelocity = 1.0f;
 	private const float runVelocity = 2.0f;
 	private const float jumpVelocity = 5.0f;
-	private int animationState = -1; // -1 for init, 0 for idle, 1 for walk
+	private Gun activeGun;
+	private Gun inactiveGun;
 
-	// Use this for initialization
 	void Start () {
 		characterController = GetComponent<CharacterController> ();
 		cameraTransform = transform.Find ("Camera");
 		velocityY = 0;
 		Cursor.visible = false;
-		GameObject sniper = transform.Find ("Camera/sniper").gameObject;
-		sniperAnimation = sniper.GetComponent<Animation> ();
-		PlayAnimation (0);
+		sniper = transform.Find ("Camera/sniper").gameObject.GetComponent<Gun> ();
+		submachineGun = transform.Find ("Camera/submachinegun").gameObject.GetComponent<Gun> ();
+		activeGun = sniper;
+		inactiveGun = submachineGun;
+		activeGun.GetAnimator ().SetState (0, 1);
+		inactiveGun.GetAnimator ().SetState (0, 0);
 	}
 
-	void PlayAnimation(int animState) {
-		if (animState != animationState) {
-			animationState = animState;
-			switch (animationState) {
-			case 0:
-				sniperAnimation.Play ("Idle");
-				break;
-			case 1:
-				sniperAnimation.Play ("Walk");
-				break;
-			}
+	void SwitchGun() {
+		if (activeGun == sniper) {
+			activeGun = submachineGun;
+			inactiveGun = sniper;
+		} else {
+			activeGun = sniper;
+			inactiveGun = submachineGun;
 		}
+		inactiveGun.GetAnimator ().SetState (0, 0);
 	}
 
 	void Update() {
+		if (Input.GetButtonDown ("SwitchGun")) {
+			SwitchGun ();
+		}
 		float rotationX = Input.GetAxis ("Mouse X");
 		float rotationY = Input.GetAxis ("Mouse Y");
 		transform.Rotate (0.0f, rotationX, 0.0f);
@@ -82,9 +86,13 @@ public class FirstPersonalControl : MonoBehaviour {
 		velocity.y = velocityY;
 		characterController.Move (Quaternion.Euler (transform.eulerAngles) * velocity * Time.fixedDeltaTime);
 		if (isWalking) {
-			PlayAnimation (1);
+			if (isRunning) {
+				activeGun.GetAnimator ().SetState (2, 1);
+			} else {
+				activeGun.GetAnimator ().SetState (1, 1);
+			}
 		} else {
-			PlayAnimation (0);
+			activeGun.GetAnimator ().SetState (0, 1);
 		}
 	}
 }
