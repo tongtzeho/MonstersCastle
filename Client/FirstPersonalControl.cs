@@ -11,23 +11,25 @@ public class FirstPersonalControl : MonoBehaviour {
 	private float velocityY;
 	private const float gravity = -9.8f;
 	private const float maxVelocityY = 30.0f;
-	private const float walkVelocity = 1.0f;
-	private const float runVelocity = 2.0f;
-	private const float jumpVelocity = 5.0f;
+	private const float walkVelocity = 2.0f;
+	private const float runVelocity = 4.0f;
+	private const float jumpVelocity = 4.0f;
 	private Gun activeGun;
 	private Gun inactiveGun;
+	private WalkingSound walkingSound;
 
 	void Start () {
 		characterController = GetComponent<CharacterController> ();
 		cameraTransform = transform.Find ("Camera");
 		velocityY = 0;
 		Cursor.visible = false;
-		sniper = transform.Find ("Camera/sniper").gameObject.GetComponent<Gun> ();
-		submachineGun = transform.Find ("Camera/submachinegun").gameObject.GetComponent<Gun> ();
+		GameObject sniperObject = transform.Find ("Camera/sniper").gameObject;
+		sniper = sniperObject.GetComponent<Gun> ();
+		GameObject submachineObject = transform.Find ("Camera/submachinegun").gameObject;
+		submachineGun = submachineObject.GetComponent<Gun> ();
 		activeGun = sniper;
 		inactiveGun = submachineGun;
-		activeGun.GetAnimator ().SetState (0, 1);
-		inactiveGun.GetAnimator ().SetState (0, 0);
+		walkingSound = GetComponent<WalkingSound> ();
 	}
 
 	void SwitchGun() {
@@ -39,12 +41,16 @@ public class FirstPersonalControl : MonoBehaviour {
 			inactiveGun = submachineGun;
 		}
 		inactiveGun.GetAnimator ().SetState (0, 0);
+		inactiveGun.ResetTime ();
 	}
 
 	void Update() {
 		if (Input.GetButtonDown ("SwitchGun")) {
 			SwitchGun ();
 		}
+		bool pressFire = Input.GetKey (KeyCode.Mouse0);
+		bool pressReload = Input.GetKey (KeyCode.R);
+		int gunState = activeGun.Action (pressFire, pressReload);
 		float rotationX = Input.GetAxis ("Mouse X");
 		float rotationY = Input.GetAxis ("Mouse Y");
 		transform.Rotate (0.0f, rotationX, 0.0f);
@@ -85,14 +91,23 @@ public class FirstPersonalControl : MonoBehaviour {
 		}
 		velocity.y = velocityY;
 		characterController.Move (Quaternion.Euler (transform.eulerAngles) * velocity * Time.fixedDeltaTime);
+		int characterState;
 		if (isWalking) {
 			if (isRunning) {
-				activeGun.GetAnimator ().SetState (2, 1);
+				characterState = 2;
 			} else {
-				activeGun.GetAnimator ().SetState (1, 1);
+				characterState = 1;
 			}
 		} else {
-			activeGun.GetAnimator ().SetState (0, 1);
+			characterState = 0;
 		}
+		activeGun.GetAnimator ().SetState (characterState, gunState);
+		walkingSound.SetSoundState (characterState);
+	}
+
+	public void GetBulletInfo(out uint bulletNum, out uint bulletCapacity, out uint bulletOwn) {
+		bulletNum = activeGun.GetBulletNum ();
+		bulletCapacity = activeGun.bulletCapacity;
+		bulletOwn = activeGun.bulletOwn;
 	}
 }

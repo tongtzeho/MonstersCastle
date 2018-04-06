@@ -7,22 +7,25 @@ public class GunAnimator : MonoBehaviour {
 	private int charcterState; // 0 for idle, 1 for walk, 2 for run
 	private int gunState; // 0 for hide, 1 for idle, 2 for fire, 3 for reload, 4 for sniper
 	private Animation gunAnimation;
-	public GameObject gunRendererGameObject;
-	private SkinnedMeshRenderer meshRenderer; // assigned in editor
+	public GameObject gunRendererGameObject; // assigned in editor
+	private SkinnedMeshRenderer meshRenderer;
+	private AudioSource fireSound;
 
 	void Start () {
 		gunAnimation = GetComponent<Animation> ();
 		meshRenderer = gunRendererGameObject.GetComponent<SkinnedMeshRenderer> ();
+		fireSound = GetComponent<AudioSource> ();
 	}
 	
 	public void SetState (int newCharacterState, int newGunState) {
 		if (newGunState == 0) {
 			meshRenderer.enabled = false;
 			gunAnimation.Play ("Idle");
+			fireSound.Stop ();
 		} else {
 			meshRenderer.enabled = true;
 			if (newGunState == 1) {
-				if (newCharacterState != charcterState) {
+				if (newGunState != gunState || newCharacterState != charcterState) {
 					switch (newCharacterState) {
 					case 0:
 						gunAnimation.Play ("Idle");
