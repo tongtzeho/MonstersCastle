@@ -6,7 +6,6 @@ public class WalkingSound : MonoBehaviour {
 
 	private AudioSource walk;
 	private AudioSource run;
-	private int soundState = 0;
 
 	void Start () {
 		AudioSource[] sounds = GetComponents<AudioSource> ();
@@ -19,23 +18,24 @@ public class WalkingSound : MonoBehaviour {
 		}
 	}
 	
-	public void SetSoundState(int newState) {
-		if (newState != soundState) {
-			switch (newState) {
-			case 0:
-				walk.Stop ();
-				run.Stop ();
-				break;
-			case 1:
+	public void SetSoundState(FirstPersonalControl.CharacterState characterState) {
+		switch (characterState) {
+		case FirstPersonalControl.CharacterState.Idle:
+			walk.Stop ();
+			run.Stop ();
+			break;
+		case FirstPersonalControl.CharacterState.Walk:
+			run.Stop ();
+			if (!walk.isPlaying) {
 				walk.Play ();
-				run.Stop ();
-				break;
-			case 2:
-				walk.Stop ();
-				run.Play ();
-				break;
 			}
+			break;
+		case FirstPersonalControl.CharacterState.Run:
+			walk.Stop ();
+			if (!run.isPlaying) {
+				run.Play ();
+			}
+			break;
 		}
-		soundState = newState;
 	}
 }

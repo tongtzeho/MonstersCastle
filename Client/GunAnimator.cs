@@ -4,8 +4,6 @@ using UnityEngine;
 
 public class GunAnimator : MonoBehaviour {
 
-	private int charcterState; // 0 for idle, 1 for walk, 2 for run
-	private int gunState; // 0 for hide, 1 for idle, 2 for fire, 3 for reload, 4 for sniper
 	private Animation gunAnimation;
 	public GameObject gunRendererGameObject; // assigned in editor
 	private SkinnedMeshRenderer meshRenderer;
@@ -17,41 +15,45 @@ public class GunAnimator : MonoBehaviour {
 		fireSound = GetComponent<AudioSource> ();
 	}
 	
-	public void SetState (int newCharacterState, int newGunState) {
-		if (newGunState == 0) {
+	public void SetState (FirstPersonalControl.CharacterState characterState, Gun.GunState gunState) {
+		if (gunState == Gun.GunState.Hide) {
 			meshRenderer.enabled = false;
 			gunAnimation.Play ("Idle");
 			fireSound.Stop ();
 		} else {
 			meshRenderer.enabled = true;
-			if (newGunState == 1) {
-				if (newGunState != gunState || newCharacterState != charcterState) {
-					switch (newCharacterState) {
-					case 0:
+			if (gunState == Gun.GunState.Idle) {
+				switch (characterState) {
+				case FirstPersonalControl.CharacterState.Idle:
+					if (!gunAnimation.IsPlaying ("Idle")) {
 						gunAnimation.Play ("Idle");
-						break;
-					case 1:
-						gunAnimation.Play ("Walk");
-						break;
-					case 2:
-						gunAnimation.Play ("Run");
-						break;
 					}
+					break;
+				case FirstPersonalControl.CharacterState.Walk:
+					if (!gunAnimation.IsPlaying ("Walk")) {
+						gunAnimation.Play ("Walk");
+					}
+					break;
+				case FirstPersonalControl.CharacterState.Run:
+					if (!gunAnimation.IsPlaying ("Run")) {
+						gunAnimation.Play ("Run");
+					}
+					break;
 				}
 			} else {
-				if (newGunState != gunState) {
-					switch (newGunState) {
-					case 2:
+				switch (gunState) {
+				case Gun.GunState.Fire:
+					if (!gunAnimation.IsPlaying ("Fire")) {
 						gunAnimation.Play ("Fire");
-						break;
-					case 3:
-						gunAnimation.Play ("Reload");
-						break;
 					}
+					break;
+				case Gun.GunState.Reload:
+					if (!gunAnimation.IsPlaying ("Reload")) {
+						gunAnimation.Play ("Reload");
+					}
+					break;
 				}
 			}
 		}
-		charcterState = newCharacterState;
-		gunState = newGunState;
 	}
 }

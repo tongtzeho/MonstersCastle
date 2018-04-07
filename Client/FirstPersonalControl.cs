@@ -4,6 +4,10 @@ using UnityEngine;
 
 public class FirstPersonalControl : MonoBehaviour {
 
+	public enum CharacterState {
+		Idle = 0, Walk = 1, Run = 2
+	}
+
 	private CharacterController characterController;
 	private Transform cameraTransform;
 	private Gun sniper;
@@ -40,7 +44,7 @@ public class FirstPersonalControl : MonoBehaviour {
 			activeGun = sniper;
 			inactiveGun = submachineGun;
 		}
-		inactiveGun.GetAnimator ().SetState (0, 0);
+		inactiveGun.GetAnimator ().SetState (CharacterState.Idle, Gun.GunState.Hide);
 		inactiveGun.ResetTime ();
 	}
 
@@ -50,7 +54,7 @@ public class FirstPersonalControl : MonoBehaviour {
 		}
 		bool pressFire = Input.GetKey (KeyCode.Mouse0);
 		bool pressReload = Input.GetKey (KeyCode.R);
-		int gunState = activeGun.Action (pressFire, pressReload);
+		Gun.GunState gunState = activeGun.Action (pressFire, pressReload);
 		float rotationX = Input.GetAxis ("Mouse X");
 		float rotationY = Input.GetAxis ("Mouse Y");
 		transform.Rotate (0.0f, rotationX, 0.0f);
@@ -91,15 +95,15 @@ public class FirstPersonalControl : MonoBehaviour {
 		}
 		velocity.y = velocityY;
 		characterController.Move (Quaternion.Euler (transform.eulerAngles) * velocity * Time.fixedDeltaTime);
-		int characterState;
+		CharacterState characterState;
 		if (isWalking) {
 			if (isRunning) {
-				characterState = 2;
+				characterState = CharacterState.Run;
 			} else {
-				characterState = 1;
+				characterState = CharacterState.Walk;
 			}
 		} else {
-			characterState = 0;
+			characterState = CharacterState.Idle;
 		}
 		activeGun.GetAnimator ().SetState (characterState, gunState);
 		walkingSound.SetSoundState (characterState);

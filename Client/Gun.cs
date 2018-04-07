@@ -4,6 +4,10 @@ using UnityEngine;
 
 public class Gun : MonoBehaviour {
 
+	public enum GunState {
+		Hide = 0, Idle = 1, Fire = 2, Reload = 3
+	}
+
 	private GunAnimator gunAnimator;
 	public float fireInterval; // assigned in editor
 	private float fireCD = 0;
@@ -13,11 +17,15 @@ public class Gun : MonoBehaviour {
 	private uint bulletNum;
 	public uint bulletCapacity; // assigned in editor
 	public uint bulletOwn; // assigned in editor
+	private Camera parent;
+	private Ray fireRay;
+	private RaycastHit hit;
 
 	void Start () {
 		gunAnimator = GetComponent<GunAnimator> ();
 		fireSound = GetComponent<AudioSource> ();
 		bulletNum = bulletCapacity;
+		parent = gameObject.transform.parent.gameObject.GetComponent<Camera> ();
 	}
 
 	void Update () {
@@ -57,6 +65,10 @@ public class Gun : MonoBehaviour {
 			fireCD = fireInterval;
 			fireSound.Play ();
 			bulletNum--;
+			fireRay = parent.ScreenPointToRay (new Vector3 (Screen.width / 2.0f, Screen.height / 2.0f, 0));
+			if (Physics.Raycast (fireRay, out hit)) {
+				
+			}
 			return true;
 		} else {
 			return false;
@@ -73,42 +85,42 @@ public class Gun : MonoBehaviour {
 	}
 
 	// return gun animator state to FirstPersonalControl.cs
-	public int Action(bool pressFire, bool pressReload) {
+	public GunState Action(bool pressFire, bool pressReload) {
 		if (pressReload) {
-			if (Reload ()) {
+			if (reloadTimeLeft != 0 || Reload ()) {
 				fireSound.Stop ();
-				return 3;
+				return GunState.Reload;
 			} else {
-				return 1;
+				return GunState.Idle;
 			}
 		} else {
 			if (reloadTimeLeft != 0) {
 				if (pressFire && Fire ()) { // press Fire while reloading
-					return 2;
+					return GunState.Fire;
 				} else {
-					return 3;
+					return GunState.Reload;
 				}
 			} else {
 				if (!pressFire) {
 					if (fireCD != 0) {
-						return 2;
+						return GunState.Fire;
 					} else {
 						fireSound.Stop ();
 						if (bulletNum == 0 && Reload ()) { // when switching to an empty gun
-							return 3;
+							return GunState.Reload;
 						} else {
-							return 1;
+							return GunState.Idle;
 						}
 					}
 				} else {
 					if (fireCD != 0 || Fire()) {
-						return 2;
+						return GunState.Fire;
 					} else { // Fire() return false, means no bullet, need to reload
 						fireSound.Stop ();
 						if (Reload ()) {
-							return 3;
+							return GunState.Reload;
 						} else {
-							return 1;
+							return GunState.Idle;
 						}
 					}
 				}
