@@ -1,8 +1,8 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class FirstPersonalControl : MonoBehaviour {
+public class Control : MonoBehaviour {
 
 	public enum CharacterState {
 		Idle = 0, Walk = 1, Run = 2
@@ -36,7 +36,7 @@ public class FirstPersonalControl : MonoBehaviour {
 		walkingSound = GetComponent<WalkingSound> ();
 	}
 
-	void SwitchGun() {
+	public void SwitchGun() {
 		if (activeGun == sniper) {
 			activeGun = submachineGun;
 			inactiveGun = sniper;
@@ -46,6 +46,10 @@ public class FirstPersonalControl : MonoBehaviour {
 		}
 		inactiveGun.GetAnimator ().SetState (CharacterState.Idle, Gun.GunState.Hide);
 		inactiveGun.ResetTime ();
+	}
+
+	public Gun GetActiveGun() {
+		return activeGun;
 	}
 
 	void Update() {
@@ -109,9 +113,9 @@ public class FirstPersonalControl : MonoBehaviour {
 		walkingSound.SetSoundState (characterState);
 	}
 
-	public void GetBulletInfo(out uint bulletNum, out uint bulletCapacity, out uint bulletOwn) {
+	public void GetBulletInfo(out short bulletNum, out short bulletCapacity, out short bulletOwn) {
 		bulletNum = activeGun.GetBulletNum ();
 		bulletCapacity = activeGun.bulletCapacity;
-		bulletOwn = activeGun.bulletOwn;
+		bulletOwn = activeGun.GetBulletOwn ();
 	}
 }
