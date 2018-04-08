@@ -14,9 +14,9 @@ public class Gun : MonoBehaviour {
 	public float reloadTime; // assigned in editor
 	private float reloadTimeLeft = 0;
 	private AudioSource fireSound;
-	private uint bulletNum;
-	public uint bulletCapacity; // assigned in editor
-	public uint bulletOwn; // assigned in editor
+	private short bulletNum = 0;
+	public short bulletCapacity; // assigned in editor
+	private short bulletOwn = 0;
 	private Camera parent;
 	private Ray fireRay;
 	private RaycastHit hit;
@@ -38,7 +38,7 @@ public class Gun : MonoBehaviour {
 			if (reloadTimeLeft <= 0) {
 				reloadTimeLeft = 0;
 				if (bulletOwn > 0) {
-					uint bulletUse = bulletCapacity - bulletNum < bulletOwn ? bulletCapacity - bulletNum : bulletOwn;
+					short bulletUse = (short)(bulletCapacity - bulletNum < bulletOwn ? bulletCapacity - bulletNum : bulletOwn);
 					bulletNum += bulletUse;
 					bulletOwn -= bulletUse;
 				}
@@ -55,8 +55,20 @@ public class Gun : MonoBehaviour {
 		reloadTimeLeft = 0;
 	}
 
-	public uint GetBulletNum() {
+	public short GetBulletNum() {
 		return bulletNum;
+	}
+
+	public void SetBulletNum(short bn) {
+		bulletNum = bn;
+	}
+
+	public short GetBulletOwn() {
+		return bulletOwn;
+	}
+
+	public void SetBulletOwn(short bo) {
+		bulletOwn = bo;
 	}
 
 	private bool Fire() {
@@ -84,7 +96,7 @@ public class Gun : MonoBehaviour {
 		}
 	}
 
-	// return gun animator state to FirstPersonalControl.cs
+	// return gun animator state to Control.cs
 	public GunState Action(bool pressFire, bool pressReload) {
 		if (pressReload) {
 			if (reloadTimeLeft != 0 || Reload ()) {

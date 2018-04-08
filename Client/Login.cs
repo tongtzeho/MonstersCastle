@@ -92,7 +92,7 @@ public class Login : MonoBehaviour {
 		} else if (!IsValidPassword (loginPassword.text)) {
 			loginHint.text = "无效的密码";
 		} else {
-			networkThread.Send ("$si " + loginUsername.text + " " + loginPassword.text);
+			networkThread.SendString ("$si " + loginUsername.text + " " + loginPassword.text);
 		}
 	}
 
@@ -102,7 +102,7 @@ public class Login : MonoBehaviour {
 		} else if (!IsValidPassword (registerPassword.text)) {
 			registerHint.text = "无效的密码";
 		} else {
-			networkThread.Send ("$su " + registerUsername.text + " " + registerPassword.text);
+			networkThread.SendString ("$su " + registerUsername.text + " " + registerPassword.text);
 		}
 	}
 

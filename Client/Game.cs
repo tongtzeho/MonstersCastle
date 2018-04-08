@@ -12,35 +12,52 @@ public class Game : MonoBehaviour {
 
 	private bool isStart = false;
 	private GameState gameState = GameState.Init;
+	private List<byte[]> recvDataList = new List<byte[]>();
 
-	private class GameStatus {
-		public Vector3 characterPos;
-		public float characterRotation;
-	}
-
-	private List<GameStatus> gameStatusList = new List<GameStatus>();
+	public Character character; // assigned in editor
 
 	public bool IsStart() {
 		return isStart;
 	}
 
+	public bool IsInitialized() {
+		return gameState == GameState.Run;
+	}
+
+	// called by Login.cs
 	public void StartGame() {
 		GameObject character = GameObject.Find ("Character");
-		character.AddComponent<FirstPersonalControl> ();
+		character.AddComponent<Control> ();
 		GameObject bulletText = GameObject.Find ("BulletText");
 		bulletText.AddComponent<BulletInfo> ();
+		isStart = true;
 	}
 
 	void Update () {
-
+		byte[][] recvDataArray;
+		lock (recvDataList) {
+			recvDataArray = recvDataList.ToArray ();
+			recvDataList.Clear ();
+		}
+		for (int i = 0; i < recvDataArray.Length; ++i) {
+			short characterDataLen = BitConverter.ToInt16 (recvDataArray [i], 0);
+			character.UpdateFromServer (gameState == GameState.Init, recvDataArray [i], 2, (int)characterDataLen);
+			gameState = GameState.Run;
+		}
 	}
 
 	// called by NetworkThread.Receive
 	public void AppendGameStatusFromServer(byte[] recvData) {
-		float posX = BitConverter.ToSingle (recvData, 0);
-		float posY = BitConverter.ToSingle (recvData, 4);
-		float posZ = BitConverter.ToSingle (recvData, 8);
-		float r = BitConverter.ToSingle (recvData, 12);
-		Debug.Log (posX + " " + posY + " " + posZ + " " + r);
+		lock (recvDataList) {
+			recvDataList.Add (recvData);
+		}
+	}
+
+	public byte[] GetCurrentGameStatus() {
+		List<byte> result = new List<byte> ();
+		byte[] characterResult = character.Serialize ();
+		result.AddRange (BitConverter.GetBytes ((short)characterResult.Length));
+		result.AddRange (characterResult);
+		return result.ToArray ();
 	}
 }

@@ -18,19 +18,19 @@ public class WalkingSound : MonoBehaviour {
 		}
 	}
 	
-	public void SetSoundState(FirstPersonalControl.CharacterState characterState) {
+	public void SetSoundState(Control.CharacterState characterState) {
 		switch (characterState) {
-		case FirstPersonalControl.CharacterState.Idle:
+		case Control.CharacterState.Idle:
 			walk.Stop ();
 			run.Stop ();
 			break;
-		case FirstPersonalControl.CharacterState.Walk:
+		case Control.CharacterState.Walk:
 			run.Stop ();
 			if (!walk.isPlaying) {
 				walk.Play ();
 			}
 			break;
-		case FirstPersonalControl.CharacterState.Run:
+		case Control.CharacterState.Run:
 			walk.Stop ();
 			if (!run.isPlaying) {
 				run.Play ();

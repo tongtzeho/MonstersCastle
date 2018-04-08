@@ -15,7 +15,7 @@ public class GunAnimator : MonoBehaviour {
 		fireSound = GetComponent<AudioSource> ();
 	}
 	
-	public void SetState (FirstPersonalControl.CharacterState characterState, Gun.GunState gunState) {
+	public void SetState (Control.CharacterState characterState, Gun.GunState gunState) {
 		if (gunState == Gun.GunState.Hide) {
 			meshRenderer.enabled = false;
 			gunAnimation.Play ("Idle");
@@ -24,17 +24,17 @@ public class GunAnimator : MonoBehaviour {
 			meshRenderer.enabled = true;
 			if (gunState == Gun.GunState.Idle) {
 				switch (characterState) {
-				case FirstPersonalControl.CharacterState.Idle:
+				case Control.CharacterState.Idle:
 					if (!gunAnimation.IsPlaying ("Idle")) {
 						gunAnimation.Play ("Idle");
 					}
 					break;
-				case FirstPersonalControl.CharacterState.Walk:
+				case Control.CharacterState.Walk:
 					if (!gunAnimation.IsPlaying ("Walk")) {
 						gunAnimation.Play ("Walk");
 					}
 					break;
-				case FirstPersonalControl.CharacterState.Run:
+				case Control.CharacterState.Run:
 					if (!gunAnimation.IsPlaying ("Run")) {
 						gunAnimation.Play ("Run");
 					}
