@@ -1,13 +1,17 @@
+# TDFPS Socket Server
+# Python 2.7.14
+
 import socket, select, os, time, json, struct
-import game
+import game, msg
 
 CONNECTION_LIST = [] # Read sockets
 CONNECTION_USERS = {} # Socket-Username (if not logined, username is None)
+CONNECTION_MSGQUEUE = {} # Socket-MsgQueue [[len, str], tail]
 USERS_CONNECTION = {} # Username-Socket (logined user)
 PLAYER_GAME = {} # Username-Game
 RECV_BUFFER = 4096
 ADDRESS = 'localhost'
-PORT = 1921
+PORT = 9121
 
 def loadUserDatabase(jsonFile): # load user information from json
 	if not os.path.isfile(jsonFile):
@@ -42,7 +46,9 @@ def login(sock, username, password):
 	if username in USER_DATABASE:
 		if password == USER_DATABASE[username]:
 			if not username in USERS_CONNECTION:
+				CONNECTION_USERS[sock] = username
 				USERS_CONNECTION[username] = sock
+				print ("'%s' login" % username)
 				return 0
 			else:
 				return 3
@@ -66,18 +72,23 @@ def register(username, password):
 		return False
 	else:
 		USER_DATABASE[username] = password
+		print ("'%s' register" % username)
+		dumpUserDatabase("user.json")
 		return True
 	
 def handleSignUp(sock, data):
 	username, password = fetchUsernamePassword(data)
 	if register(username, password):
-		login(sock, username, data) # login after register
+		login(sock, username, password) # login after register
+		if not username in PLAYER_GAME:
+			createNewGame(username)
+		sendMsgToSock(sock, "$si0")
 	else:
 		sendMsgToSock(sock, "$su1")
 	
-def sendMsgToSock(sock, msg): # send msg to client socket
+def sendMsgToSock(sock, message): # send msg to client socket
 	try:
-		sock.send(msg)
+		sock.send(msg.encode(message))
 	except:
 		pass
 
@@ -102,6 +113,7 @@ def logout(username):
 if __name__ == "__main__":
 	USER_DATABASE = loadUserDatabase("user.json")
 	gameSocketServer = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	gameSocketServer.setblocking(False)
 	gameSocketServer.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 	gameSocketServer.bind((ADDRESS, PORT))
 	gameSocketServer.listen(100)
@@ -115,27 +127,40 @@ if __name__ == "__main__":
 			# new connection
 			if sock == gameSocketServer:
 				newSock, addr = gameSocketServer.accept()
+				newSock.setblocking(False)
 				CONNECTION_LIST.append(newSock)
 				CONNECTION_USERS[newSock] = None
+				CONNECTION_MSGQUEUE[newSock] = [[], ""]
 				print ("Client (%s, %s) connected" % addr)
 			
 			# message from existing client
 			else:
-				#try:
+				try:
 					data = sock.recv(RECV_BUFFER)
 					if data:
-						#print ("Recv(%d): %s" % (len(data), data))
-						handleClientData(sock, data)
-				#except:
-				#	logout(CONNECTION_USERS[sock])
-				#	try:
-				#		sock.close()
-				#	except:
-				#		pass
-				#	CONNECTION_LIST.remove(sock)
-				#	CONNECTION_USERS.pop(sock)
-				#	continue
-		
-		dumpUserDatabase("user.json")
+						CONNECTION_MSGQUEUE[sock][1] = msg.enqueue(CONNECTION_MSGQUEUE[sock][0], data, CONNECTION_MSGQUEUE[sock][1])
+						for m in CONNECTION_MSGQUEUE[sock][0]:
+							if m[0] == len(m[1]):
+								handleClientData(sock, m[1])
+							else:
+								break
+						if len(CONNECTION_MSGQUEUE[sock][0]):
+							if CONNECTION_MSGQUEUE[sock][0][-1][0] == len(CONNECTION_MSGQUEUE[sock][0][-1][1]):
+								CONNECTION_MSGQUEUE[sock][0] = []
+							else:
+								CONNECTION_MSGQUEUE[sock][0] = [CONNECTION_MSGQUEUE[sock][0][-1]]
+					else:
+						a = 1/0 # just to raise except
+				except:
+					logout(CONNECTION_USERS[sock])
+					try:
+						print ("Close a socket")
+						sock.close()
+					except:
+						pass
+					CONNECTION_LIST.remove(sock)
+					CONNECTION_USERS.pop(sock)
+					CONNECTION_MSGQUEUE.pop(sock)
+					continue
 	
 	gameSocketServer.close()

@@ -1,4 +1,8 @@
+# TDFPS Game (As Client Thread)
+# Python 2.7.14
+
 import socket, threading, random, struct, time
+import msg, character
 
 class game(threading.Thread): # run as a game monitor client
 	def __init__(self, username, address, port):
@@ -13,36 +17,43 @@ class game(threading.Thread): # run as a game monitor client
 		
 	def initGame(self):
 		self.gameLock.acquire()
-		self.characterPos = (20.0, 5.0, 15.0)
-		self.characterRotation = 90.0
+		self.character = character.character()
 		self.gameLock.release()
 	
 	def run(self): # override
 		self.gameTime = time.time()
 		while not self.isStop:
 			currTime = time.time()
-			if currTime - self.gameTime > 0.0333333333333:
-				self.update()
-				self.conn.send(self.getGameCurrInfo())
+			deltaTime = currTime - self.gameTime
+			if deltaTime > 0.0166666666667:
+				self.update(deltaTime)
+				self.conn.send(msg.encode(self.getGameCurrInfo()))
 				self.gameTime = currTime
 		self.conn.close()
 		
 	def stop(self):
 		self.isStop = True
 		
-	def update(self):
+	def update(self, deltaTime):
 		self.gameLock.acquire()
-		# TODO: Update Game By Current Status
+		self.character.update(deltaTime)
 		self.gameLock.release()
 		
 	def getGameCurrInfo(self):
+		head = struct.pack("=4s2i16s", "^^^@", self.recog, len(self.username), self.username)
 		self.gameLock.acquire()
-		headStr = "^^^@"
-		result = struct.pack("4sii16sffff", headStr, self.recog, len(self.username), self.username, self.characterPos[0], self.characterPos[1], self.characterPos[2], self.characterRotation)
+		characterResult = self.character.serialize()
+		characterResult = struct.pack("=h", len(characterResult))+characterResult
 		self.gameLock.release()
-		return result
+		return head + characterResult
 		
 	def handle(self, data):
+		characterDataLen = struct.unpack("=h", data[:2])[0]
+		characterData = data[2:2+characterDataLen]
 		self.gameLock.acquire()
-		# TODO: Get Game Status From Client
+		try:
+			self.character.handle(characterData)
+		except:
+			print ("game.py handle error")
+			pass
 		self.gameLock.release()
