@@ -15,6 +15,7 @@ public class Game : MonoBehaviour {
 	private List<byte[]> recvDataList = new List<byte[]>();
 
 	public Character character; // assigned in editor
+	public Brute brute; // assigned in editor
 
 	public bool IsStart() {
 		return isStart;
@@ -40,8 +41,13 @@ public class Game : MonoBehaviour {
 			recvDataList.Clear ();
 		}
 		for (int i = 0; i < recvDataArray.Length; ++i) {
-			short characterDataLen = BitConverter.ToInt16 (recvDataArray [i], 0);
-			character.UpdateFromServer (gameState == GameState.Init, recvDataArray [i], 2, (int)characterDataLen);
+			int offset = 0;
+			short characterDataLen = BitConverter.ToInt16 (recvDataArray [i], offset);
+			character.UpdateFromServer (gameState == GameState.Init, recvDataArray [i], offset + 2, (int)characterDataLen);
+			offset += 2 + characterDataLen;
+			short bruteDataLen = BitConverter.ToInt16 (recvDataArray [i], offset);
+			brute.UpdateFromServer (gameState == GameState.Init, recvDataArray [i], offset + 2, (int)bruteDataLen);
+			offset += 2 + bruteDataLen;
 			gameState = GameState.Run;
 		}
 	}
@@ -58,6 +64,9 @@ public class Game : MonoBehaviour {
 		byte[] characterResult = character.Serialize ();
 		result.AddRange (BitConverter.GetBytes ((short)characterResult.Length));
 		result.AddRange (characterResult);
+		byte[] orcResult = brute.Serialize ();
+		result.AddRange (BitConverter.GetBytes ((short)orcResult.Length));
+		result.AddRange (orcResult);
 		return result.ToArray ();
 	}
 }
