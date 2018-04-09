@@ -1,9 +1,9 @@
-# TDFPS ORC (Big Monster)
+# TDFPS Brute (Big Monster)
 # Python 2.7.14
 
 import struct, time
 
-class orc:
+class brute:
 	def __init__(self):
 		self.debug = True
 		self.level = 0
@@ -16,9 +16,9 @@ class orc:
 		self.action = 0 # 0 for born, 1 for walk, 2 for idle, 3 for attack, 4 for die
 		self.rebornPosition = [0.0, 0.0, 50.0]
 		self.rebornRotationY = 180.0
-		self.velocity = [0.0, 0.0, -5.0]
-		self.rebornTime = 1.0
-		self.walkTime = 9.0
+		self.velocity = [0.0, 0.0, -4.0]
+		self.rebornTime = 1.733
+		self.walkTime = 11.0
 		
 	def reborn(self):
 		if self.level >= len(self.maxHp):
@@ -65,4 +65,3 @@ class orc:
 		
 	def log(self):
 		print [self.isAlive, self.level, self.hp], self.position, [self.action]
-				
