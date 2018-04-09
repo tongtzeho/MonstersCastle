@@ -2,7 +2,7 @@
 # Python 2.7.14
 
 import socket, threading, random, struct, time
-import msg, character, orc
+import msg, character, brute
 
 class game(threading.Thread): # run as a game monitor client
 	def __init__(self, username, address, port):
@@ -18,7 +18,7 @@ class game(threading.Thread): # run as a game monitor client
 	def initGame(self):
 		self.gameLock.acquire()
 		self.character = character.character()
-		self.orc = orc.orc()
+		self.brute = brute.brute()
 		self.gameTime = 0
 		self.level = 0
 		self.gameLock.release()
@@ -38,7 +38,7 @@ class game(threading.Thread): # run as a game monitor client
 		self.isStop = True
 	
 	def isAllMonsterDead(self, waitTime, dt):
-		if self.orc.isAlive:
+		if self.brute.isAlive:
 			self.waitTime = 0
 		else:
 			try:
@@ -50,13 +50,13 @@ class game(threading.Thread): # run as a game monitor client
 		return False
 		
 	def allMonsterReborn(self):
-		self.orc.reborn()
+		self.brute.reborn()
 	
 	def update(self, deltaTime):
 		self.gameLock.acquire()
 		self.gameTime += deltaTime
 		self.character.update(deltaTime)
-		self.orc.update(deltaTime)
+		self.brute.update(deltaTime)
 		if (self.level == 0 and self.gameTime >= 5) or (self.level >= 1 and self.level <= 4 and self.isAllMonsterDead(10, deltaTime)):
 			self.allMonsterReborn()
 			self.level += 1
@@ -67,24 +67,27 @@ class game(threading.Thread): # run as a game monitor client
 		self.gameLock.acquire()
 		characterResult = self.character.serialize()
 		characterResult = struct.pack("=h", len(characterResult))+characterResult
-		orcResult = self.orc.serialize()
-		orcResult = struct.pack("=h", len(orcResult))+orcResult
+		bruteResult = self.brute.serialize()
+		bruteResult = struct.pack("=h", len(bruteResult))+bruteResult
 		self.gameLock.release()
-		return head + characterResult + orcResult
+		return head + characterResult + bruteResult
 		
 	def handle(self, data):
-		offset = 0
-		characterDataLen = struct.unpack("=h", data[offset:offset+2])[0]
-		characterData = data[offset+2:offset+2+characterDataLen]
-		offset += 2+characterDataLen
-		orcDataLen = struct.unpack("=h", data[offset:offset+2])[0]
-		orcData = data[offset+2:offset+2+orcDataLen]
-		offset += 2+orcDataLen
-		self.gameLock.acquire()
 		try:
-			self.character.handle(characterData)
-			self.orc.handle(orcData)
+			offset = 0
+			characterDataLen = struct.unpack("=h", data[offset:offset+2])[0]
+			characterData = data[offset+2:offset+2+characterDataLen]
+			offset += 2+characterDataLen
+			bruteDataLen = struct.unpack("=h", data[offset:offset+2])[0]
+			bruteData = data[offset+2:offset+2+bruteDataLen]
+			offset += 2+bruteDataLen
+			self.gameLock.acquire()
+			try:
+				self.character.handle(characterData)
+				self.brute.handle(bruteData)
+			except:
+				print ("game.py handle error")
+				pass
+			self.gameLock.release()
 		except:
-			print ("game.py handle error")
-			pass
-		self.gameLock.release()
+			print ("unpack data error")
