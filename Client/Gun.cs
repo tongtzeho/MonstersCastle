@@ -19,13 +19,15 @@ public class Gun : MonoBehaviour {
 	private short bulletOwn = 0;
 	private Camera parent;
 	private Ray fireRay;
-	private RaycastHit hit;
+	private RaycastHit hitResult;
+	private Hit hitSystem;
 
 	void Start () {
 		gunAnimator = GetComponent<GunAnimator> ();
 		fireSound = GetComponent<AudioSource> ();
 		bulletNum = bulletCapacity;
 		parent = gameObject.transform.parent.gameObject.GetComponent<Camera> ();
+		hitSystem = GameObject.Find ("Game").GetComponent<Hit> ();
 	}
 
 	void Update () {
@@ -78,8 +80,8 @@ public class Gun : MonoBehaviour {
 			fireSound.Play ();
 			bulletNum--;
 			fireRay = parent.ScreenPointToRay (new Vector3 (Screen.width / 2.0f, Screen.height / 2.0f, 0));
-			if (Physics.Raycast (fireRay, out hit)) {
-				
+			if (Physics.Raycast (fireRay, out hitResult)) {
+				hitSystem.HitCollider (10000, hitResult.collider);
 			}
 			return true;
 		} else {

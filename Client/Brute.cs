@@ -6,22 +6,18 @@ using UnityEngine;
 public class Brute : MonoBehaviour {
 	public short isAlive = 0;
 	public short level = 0;
-	public short hp = 0;
-	public short maxHp = 1000;
+	public Monster monster = new Monster ();
 	public short action = 0;
-
-	private Animator animator;
-
-	void Start() {
-		animator = GetComponent<Animator> ();
-	}
+	public Animator animator; // assigned in editor
+	private float dieAnimationTotalTime = 1.3f;
+	private float dieAnimationCurrTime = 0;
 
 	public byte[] Serialize() {
 		List<byte> result = new List<byte> ();
 		result.AddRange (BitConverter.GetBytes (isAlive));
 		result.AddRange (BitConverter.GetBytes (level));
-		result.AddRange (BitConverter.GetBytes (hp));
-		result.AddRange (BitConverter.GetBytes (maxHp));
+		result.AddRange (BitConverter.GetBytes (monster.hp));
+		result.AddRange (BitConverter.GetBytes (monster.maxHp));
 		result.AddRange (BitConverter.GetBytes (transform.position.x));
 		result.AddRange (BitConverter.GetBytes (transform.position.y));
 		result.AddRange (BitConverter.GetBytes (transform.position.z));
@@ -34,37 +30,26 @@ public class Brute : MonoBehaviour {
 		short isCurrAlive = BitConverter.ToInt16 (recvData, beginIndex);
 		level = BitConverter.ToInt16 (recvData, beginIndex + 2);
 		bool isReborn = (isCurrAlive == 1 && isAlive == 0 && !gameInitializing);
-		bool isDying = (isCurrAlive == 0 && isAlive == 1 && !gameInitializing);
-		SetReborn (isReborn);
-		SetDying (isDying);
 		isAlive = isCurrAlive;
 		if (gameInitializing || isReborn) {
-			hp = BitConverter.ToInt16 (recvData, beginIndex + 4);
-			maxHp = BitConverter.ToInt16 (recvData, beginIndex + 6);
+			monster.hp = BitConverter.ToInt16 (recvData, beginIndex + 4);
+			monster.maxHp = BitConverter.ToInt16 (recvData, beginIndex + 6);
 		}
 		if (isAlive == 1) {
 			transform.position = new Vector3 (BitConverter.ToSingle (recvData, beginIndex + 8), BitConverter.ToSingle (recvData, beginIndex + 12), BitConverter.ToSingle (recvData, beginIndex + 16));
 			transform.rotation = Quaternion.Euler (0, BitConverter.ToSingle (recvData, beginIndex + 20), 0);
+			dieAnimationCurrTime = 0;
 		} else {
-			transform.position = new Vector3 (0, -20, -30);
+			dieAnimationCurrTime += Time.deltaTime;
+			if (dieAnimationCurrTime > dieAnimationTotalTime) {
+				transform.position = new Vector3 (0, -20, -30);
+			}
 		}
 		action = BitConverter.ToInt16 (recvData, beginIndex + 24);
-		if (isAlive == 1 && action != 1) {
-			SetStay (true);
-		} else {
-			SetStay (false);
-		}
+		SetAnimationAction (action);
 	}
 
-	void SetReborn(bool r) {
-		animator.SetBool ("Reborn", r);
-	}
-
-	void SetStay(bool s) {
-		animator.SetBool ("Stay", s);
-	}
-
-	void SetDying(bool d) {
-		animator.SetBool ("Dying", d);
+	void SetAnimationAction(short action) {
+		animator.SetInteger ("Action", (int)action);
 	}
 }
