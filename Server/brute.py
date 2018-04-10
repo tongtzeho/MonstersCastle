@@ -13,7 +13,7 @@ class brute:
 		self.hp = 0
 		self.position = [0.0, 0.0, 0.0]
 		self.rotationY = 0.0
-		self.action = 0 # 0 for born, 1 for walk, 2 for idle, 3 for attack, 4 for die
+		self.action = 2 # 0 for born, 1 for walk, 2 for idle, 3 for attack, 4 for die
 		self.rebornPosition = [0.0, 0.0, 50.0]
 		self.rebornRotationY = 180.0
 		self.velocity = [0.0, 0.0, -4.0]
