@@ -21,6 +21,7 @@ public class Gun : MonoBehaviour {
 	private Ray fireRay;
 	private RaycastHit hitResult;
 	private Hit hitSystem;
+	public float attack; // assigned in editor
 
 	void Start () {
 		gunAnimator = GetComponent<GunAnimator> ();
@@ -81,7 +82,7 @@ public class Gun : MonoBehaviour {
 			bulletNum--;
 			fireRay = parent.ScreenPointToRay (new Vector3 (Screen.width / 2.0f, Screen.height / 2.0f, 0));
 			if (Physics.Raycast (fireRay, out hitResult)) {
-				hitSystem.HitCollider (10000, hitResult.collider);
+				hitSystem.HitCollider ((short)attack, hitResult.collider);
 			}
 			return true;
 		} else {

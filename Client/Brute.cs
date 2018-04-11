@@ -9,7 +9,7 @@ public class Brute : MonoBehaviour {
 	public Monster monster = new Monster ();
 	public short action = 0;
 	public Animator animator; // assigned in editor
-	private float dieAnimationTotalTime = 1.3f;
+	private float dieAnimationTotalTime = 1.4f;
 	private float dieAnimationCurrTime = 0;
 
 	public byte[] Serialize() {

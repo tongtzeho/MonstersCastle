@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -66,7 +66,7 @@ public class Control : MonoBehaviour {
 		Vector3 velocity;
 		bool isOnGround = characterController.isGrounded;
 		if (!isOnGround) {
-			velocityY += gravity * Time.fixedDeltaTime;
+			velocityY += gravity * Time.deltaTime;
 		} else {
 			if (Input.GetKey (KeyCode.Space)) {
 				velocityY = jumpVelocity;
@@ -98,7 +98,7 @@ public class Control : MonoBehaviour {
 			velocity.x = 0.0f;
 		}
 		velocity.y = velocityY;
-		characterController.Move (Quaternion.Euler (transform.eulerAngles) * velocity * Time.fixedDeltaTime);
+		characterController.Move (Quaternion.Euler (transform.eulerAngles) * velocity * Time.deltaTime);
 		CharacterState characterState;
 		if (isWalking) {
 			if (isRunning) {
