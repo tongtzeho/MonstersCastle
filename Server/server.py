@@ -149,8 +149,6 @@ if __name__ == "__main__":
 								CONNECTION_MSGQUEUE[sock][0] = []
 							else:
 								CONNECTION_MSGQUEUE[sock][0] = [CONNECTION_MSGQUEUE[sock][0][-1]]
-					else:
-						a = 1/0 # just to raise except
 				except:
 					logout(CONNECTION_USERS[sock])
 					try:

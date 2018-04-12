@@ -5,7 +5,7 @@ import struct, time
 
 class brute:
 	def __init__(self):
-		self.debug = True
+		self.debug = False
 		self.level = 0
 		self.maxHp = [300, 600, 900, 1200, 1500]
 		self.atk = [100, 200, 300, 400, 500]

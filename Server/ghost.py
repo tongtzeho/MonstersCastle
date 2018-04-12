@@ -18,7 +18,7 @@ class ghost:
 		self.distSqrThreshold = 0.08*0.08
 		self.bornCurrTime = 0
 		self.bornTotalTime = 1
-		self.bornVelocity = 0.1
+		self.bornVelocity = 1
 		self.attackCurrTime = 0
 		self.attackAimTime = 0.5
 		self.attackTotalTime = 1.5
