@@ -2,7 +2,7 @@
 # Python 2.7.14
 
 import socket, threading, random, struct, time
-import msg, character, brute
+import msg, character, brute, ghost
 
 class game(threading.Thread): # run as a game monitor client
 	def __init__(self, username, address, port):
@@ -19,6 +19,9 @@ class game(threading.Thread): # run as a game monitor client
 		self.gameLock.acquire()
 		self.character = character.character()
 		self.brute = brute.brute()
+		self.ghosts = {}
+		self.ghostId = 1
+		self.ghostMax = 2000
 		self.gameTime = 0
 		self.level = 0
 		self.gameLock.release()
@@ -37,7 +40,7 @@ class game(threading.Thread): # run as a game monitor client
 	def stop(self):
 		self.isStop = True
 	
-	def isAllMonsterDead(self, waitTime, dt):
+	def isBruteDead(self, waitTime, dt):
 		if self.brute.isAlive:
 			self.waitTime = 0
 		else:
@@ -57,10 +60,24 @@ class game(threading.Thread): # run as a game monitor client
 		self.gameTime += deltaTime
 		self.character.update(deltaTime)
 		self.brute.update(deltaTime)
-		if (self.level == 0 and self.gameTime >= 5) or (self.level >= 1 and self.level <= 4 and self.isAllMonsterDead(10, deltaTime)):
-			self.allMonsterReborn()
+		if (self.level == 0 and self.gameTime >= 5) or (self.level >= 1 and self.level <= 4 and self.isBruteDead(10, deltaTime)):
+			self.brute.reborn()
 			self.level += 1
+		self.updateGhosts(deltaTime)
 		self.gameLock.release()
+		
+	def updateGhosts(self, deltaTime):
+		delList = []
+		for k, v in ghosts.items():
+			ret = v.update(deltaTime)
+			if ret[0] == -1:
+				delList.append(k)
+		for k in delList:
+			ghosts.pop(k)
+		if self.gameTime >= 2*self.ghostId and self.gameTime-self.deltaTime < 2*self.ghostId and self.ghostId <= self.ghostMax:
+			bornPoint = int(self.gameTime/2)%3
+			self.ghosts[self.ghostId] = ghost.ghost(self.ghostId, bornPoint)
+			self.ghostID += 1
 		
 	def serialize(self):
 		head = struct.pack("=4s2i16s", "^^^@", self.recog, len(self.username), self.username)
@@ -69,8 +86,20 @@ class game(threading.Thread): # run as a game monitor client
 		characterResult = struct.pack("=h", len(characterResult))+characterResult
 		bruteResult = self.brute.serialize()
 		bruteResult = struct.pack("=h", len(bruteResult))+bruteResult
+		if len(ghosts) == 0:
+			ghostsResult = struct.pack("=hh", 0, 0)
+		else:
+			ghostsResult = struct.pack("=h", len(ghosts))
+			byteGhost = 0
+			for g in ghosts.values():
+				if byteGhost == 0:
+					s = g.serialize()
+					byteGhost = len(s)
+					ghostsResult += struct.pack("=h", byteGhost)+s
+				else:
+					ghostsResult += g.serialize()
 		self.gameLock.release()
-		return head + characterResult + bruteResult
+		return head + characterResult + bruteResult + ghostsResult
 		
 	def handle(self, data):
 		try:
@@ -81,10 +110,19 @@ class game(threading.Thread): # run as a game monitor client
 			bruteDataLen = struct.unpack("=h", data[offset:offset+2])[0]
 			bruteData = data[offset+2:offset+2+bruteDataLen]
 			offset += 2+bruteDataLen
+			ghostsDataSize, ghostsDataByte = struct.unpack("=hh", data[offset:offset+4])
+			ghostsData = data[offset+4:offset+4+ghostsDataSize*ghostsDataByte]
+			offset += 4
 			self.gameLock.acquire()
 			try:
 				self.character.handle(characterData)
 				self.brute.handle(bruteData)
+				offset = 0
+				for i in range(ghostsDataSize):
+					id = struct.unpack("=h", ghostsData[offset:offset+2])[0]
+					if id in ghosts:
+						ghosts[id].handle(ghostsData[offset:offset+ghostsDataByte])
+					offset += ghostsDataByte
 			except:
 				print ("game.py handle error")
 				pass
