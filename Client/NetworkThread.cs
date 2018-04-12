@@ -44,6 +44,7 @@ public class NetworkThread : MonoBehaviour {
 		clientSocket.Connect(new IPEndPoint(ip, port));
 		Thread recvThread = new Thread(new ThreadStart(Receive));
 		recvThread.Name = "Receiver";
+		recvThread.IsBackground = true;
 		recvThread.Start ();
 	}
 

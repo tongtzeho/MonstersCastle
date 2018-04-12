@@ -20,7 +20,7 @@ public class BruteHP : MonoBehaviour {
 		hpSliderObject = transform.Find ("HPCanvas/HPSlider").gameObject;
 		hpSlider = hpSliderObject.GetComponent<UnityEngine.UI.Slider> ();
 		hpRect = hpSliderObject.GetComponent<RectTransform> ();
-		head = transform.Find ("hipcontrol/headcontrol/hpbar");
+		head = transform.Find ("hipcontrol/hpbar");
 		characterCamera = GameObject.Find ("Character/Camera").GetComponent<Camera> ();
 		monster = GetComponent<Brute> ().monster;
 	}

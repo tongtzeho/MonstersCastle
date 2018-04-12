@@ -16,6 +16,9 @@ public class Game : MonoBehaviour {
 
 	public Character character; // assigned in editor
 	public Brute brute; // assigned in editor
+	public GhostPool ghostPool; // assigned in editor
+
+	private HashSet<int> usedGhostServerId = new HashSet<int>();
 
 	public bool IsStart() {
 		return isStart;
@@ -48,6 +51,21 @@ public class Game : MonoBehaviour {
 			short bruteDataLen = BitConverter.ToInt16 (recvDataArray [i], offset);
 			brute.UpdateFromServer (gameState == GameState.Init, recvDataArray [i], offset + 2, (int)bruteDataLen);
 			offset += 2 + bruteDataLen;
+			short ghostDataLen = BitConverter.ToInt16 (recvDataArray [i], offset);
+			short ghostDataByte = BitConverter.ToInt16 (recvDataArray [i], offset + 2);
+			offset += 4;
+			usedGhostServerId.Clear ();
+			for (int j = 0; j < ghostDataLen; ++j) {
+				short ghostServerId = BitConverter.ToInt16 (recvDataArray [i], offset);
+				short ghostHp = BitConverter.ToInt16 (recvDataArray [i], offset + 2);
+				Ghost ghost = ghostPool.GetGhostFromServerId ((int)ghostServerId, ghostHp);
+				if (ghost != null) {
+					ghost.UpdateFromServer (recvDataArray [i], offset, ghostDataByte);
+				}
+				offset += ghostDataByte;
+				usedGhostServerId.Add (ghostServerId);
+			}
+			ghostPool.RecycleUnusedGhosts (usedGhostServerId);
 			gameState = GameState.Run;
 		}
 	}
@@ -64,9 +82,10 @@ public class Game : MonoBehaviour {
 		byte[] characterResult = character.Serialize ();
 		result.AddRange (BitConverter.GetBytes ((short)characterResult.Length));
 		result.AddRange (characterResult);
-		byte[] orcResult = brute.Serialize ();
-		result.AddRange (BitConverter.GetBytes ((short)orcResult.Length));
-		result.AddRange (orcResult);
+		byte[] bruteResult = brute.Serialize ();
+		result.AddRange (BitConverter.GetBytes ((short)bruteResult.Length));
+		result.AddRange (bruteResult);
+		result.AddRange (ghostPool.Serialize ());
 		return result.ToArray ();
 	}
 }
