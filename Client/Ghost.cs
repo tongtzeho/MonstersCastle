@@ -8,6 +8,11 @@ public class Ghost : MonoBehaviour {
 	public short serverId;
 	public Monster monster = new Monster();
 	public short action;
+	private GhostAnimator ghostAnimator;
+
+	void Start() {
+		ghostAnimator = GetComponent<GhostAnimator> ();
+	}
 
 	public List<byte> Serialize() {
 		List<byte> result = new List<byte> ();
@@ -36,10 +41,16 @@ public class Ghost : MonoBehaviour {
 
 	public void UpdateFromServer (byte[] recvData, int beginIndex, int length) {
 		monster.maxHp = BitConverter.ToInt16 (recvData, beginIndex + 4);
+		action = BitConverter.ToInt16 (recvData, beginIndex + 22);
+		if (action == 5) {
+			monster.hp = 0;
+		}
 		if (monster.hp > 0) {
 			transform.position = new Vector3 (BitConverter.ToSingle (recvData, beginIndex + 6), BitConverter.ToSingle (recvData, beginIndex + 10), BitConverter.ToSingle (recvData, beginIndex + 14));
 			transform.rotation = Quaternion.Euler (0, BitConverter.ToSingle (recvData, beginIndex + 18), 0);
+		} else {
+			transform.position = new Vector3 (BitConverter.ToSingle (recvData, beginIndex + 6), BitConverter.ToSingle (recvData, beginIndex + 10) - 50.0f, BitConverter.ToSingle (recvData, beginIndex + 14));
 		}
-		action = BitConverter.ToInt16 (recvData, beginIndex + 22);
+		ghostAnimator.SetState (action);
 	}
 }

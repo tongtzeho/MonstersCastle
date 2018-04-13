@@ -15,9 +15,9 @@ public class Control : MonoBehaviour {
 	private float velocityY;
 	private const float gravity = -9.8f;
 	private const float maxVelocityY = 30.0f;
-	private const float walkVelocity = 2.0f;
-	private const float runVelocity = 4.0f;
-	private const float jumpVelocity = 4.0f;
+	private const float walkVelocity = 2.5f;
+	private const float runVelocity = 5.5f;
+	private const float jumpVelocity = 4.5f;
 	private Gun activeGun;
 	private Gun inactiveGun;
 	private WalkingSound walkingSound;

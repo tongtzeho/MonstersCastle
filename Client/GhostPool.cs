@@ -5,14 +5,14 @@ using UnityEngine;
 
 public class GhostPool : MonoBehaviour {
 
-	private Hashtable activeGhost = new Hashtable (); // key: GhostId in server, value: GhostId in pool (0 to 29)
-	private Ghost[] ghostPool = new Ghost[30];
-	private Queue freeIndex = new Queue (); // GhostId in pool (0 to 29)
+	private Hashtable activeGhost = new Hashtable (); // key: GhostId in server, value: GhostId in pool (0 to 39)
+	private Ghost[] ghostPool = new Ghost[40];
+	private Queue freeIndex = new Queue (); // GhostId in pool (0 to 39)
 
-	void Start () {
+	void Awake () {
 		for (int i = 0; i < ghostPool.Length; ++i) {
 			GameObject newGhost = Instantiate (Resources.Load ("Prefabs/Ghost") as GameObject, transform);
-			newGhost.name += i.ToString ();
+			newGhost.name = "Ghost" + i.ToString ();
 			ghostPool [i] = newGhost.GetComponent<Ghost> ();
 			ghostPool [i].Disable ();
 			freeIndex.Enqueue (i);
