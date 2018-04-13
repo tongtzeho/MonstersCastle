@@ -1,28 +1,39 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class BruteHP : MonoBehaviour {
+public class MonsterHPBar : MonoBehaviour {
 
 	private GameObject hpSliderObject;
 	private UnityEngine.UI.Slider hpSlider;
 	private RectTransform hpRect;
-	private Transform head;
-	private Camera characterCamera;
-	private float minDist = 1;
-	private float maxDist = 40;
-	private Vector3 maxScale = new Vector3(1, 1, 1);
-	private Vector3 minScale = new Vector3(0.2f, 0.4f, 1);
-	private Vector3 scale = new Vector3(1, 1, 1);
 	private Monster monster;
+	private Transform hpBar;
+	private float minDist;
+	private float maxDist;
+	private Vector3 maxScale;
+	private Vector3 minScale;
+	private Vector3 scale;
+	private Camera characterCamera;
 
 	void Start () {
 		hpSliderObject = transform.Find ("HPCanvas/HPSlider").gameObject;
 		hpSlider = hpSliderObject.GetComponent<UnityEngine.UI.Slider> ();
 		hpRect = hpSliderObject.GetComponent<RectTransform> ();
-		head = transform.Find ("hipcontrol/hpbar");
+		if (gameObject.name == "Brute") {
+			monster = GetComponent<Brute> ().monster;
+			hpBar = transform.Find ("hipcontrol/hpbar");
+		} else { // Ghost
+			monster = GetComponent<Ghost> ().monster;
+			hpBar = transform.Find ("HpBar");
+		}
+		minDist = 1;
+		maxDist = 40;
+		minScale = new Vector3 (0.2f, 0.3f, 1);
+		maxScale = new Vector3 (1, 1, 1);
+		scale = new Vector3 (1, 1, 1);
 		characterCamera = GameObject.Find ("Character/Camera").GetComponent<Camera> ();
-		monster = GetComponent<Brute> ().monster;
+
 	}
 
 	private bool UpdateValue() {
@@ -35,7 +46,7 @@ public class BruteHP : MonoBehaviour {
 	}
 
 	private bool UpdateRect() {
-		Vector3 headScreen = characterCamera.WorldToScreenPoint (head.position);
+		Vector3 headScreen = characterCamera.WorldToScreenPoint (hpBar.position);
 		if (headScreen.z <= 0) {
 			return false;
 		}
