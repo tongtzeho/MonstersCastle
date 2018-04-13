@@ -67,6 +67,10 @@ class game(threading.Thread): # run as a game monitor client
 		self.gameLock.release()
 		
 	def updateGhosts(self, deltaTime):
+		if self.gameTime >= 2*self.ghostId and self.gameTime-deltaTime < 2*self.ghostId and self.ghostId <= self.ghostMax and self.level < 5:
+			bornPoint = int(self.gameTime/2)%3
+			self.ghosts[self.ghostId] = ghost.ghost(self.ghostId, bornPoint)
+			self.ghostId += 1
 		delList = []
 		for k, v in self.ghosts.items():
 			ret = v.update(deltaTime)
@@ -74,10 +78,6 @@ class game(threading.Thread): # run as a game monitor client
 				delList.append(k)
 		for k in delList:
 			self.ghosts.pop(k)
-		if self.gameTime >= 2*self.ghostId and self.gameTime-deltaTime < 2*self.ghostId and self.ghostId <= self.ghostMax and self.level < 5:
-			bornPoint = int(self.gameTime/2)%3
-			self.ghosts[self.ghostId] = ghost.ghost(self.ghostId, bornPoint)
-			self.ghostId += 1
 		
 	def serialize(self):
 		head = struct.pack("=4s2i16s", "^^^@", self.recog, len(self.username), self.username)

@@ -7,8 +7,8 @@ class ghost:
 	def __init__(self, id, bornPoint): # [0, 1, 2] for [Left, Mid, Right]
 		self.debug = True
 		self.id = id
-		self.hp = 100
-		self.maxHp = 100
+		self.hp = 150
+		self.maxHp = 150
 		self.position = [0.0, 0.0, 0.0]
 		self.rotationY = 0.0
 		self.action = 2 # 1 for walk, 2 for idle, 3 for attack, 4 for die, 5 for bomb
@@ -49,8 +49,19 @@ class ghost:
 				[0, 2]
 			]
 	
-	def getRotationY(self, x0, z0, x1, z1):
-		return 0.0
+	def getRotationY(self, x0, z0, x1, z1): # from [x0, z0] to [x1, z1]
+		dx = x1 - x0
+		dz = z1 - z0
+		l = 1.0/math.sqrt(dx*dx + dz*dz)
+		dx, dz = dx*l, dz*l
+		if dz > 1:
+			dz = 1
+		elif dz < -1:
+			dz = -1
+		if dx >= 0:
+			return math.acos(dz)*57.29577951308232
+		else:
+			return math.acos(dz)*-57.29577951308232
 	
 	def getVelocity(self): # calculate velocity(vector) from checkPoint[phase] to checkPoint[phase+1]
 		v = [self.checkPoint[self.phase+1][0]-self.checkPoint[self.phase][0], self.checkPoint[self.phase+1][1]-self.checkPoint[self.phase][1]]
@@ -109,8 +120,8 @@ class ghost:
 				# else: # is attcking
 		else: # die
 			self.action = 4
-			self.bombCurrTime += dt
-			if self.bombCurrTime >= self.bombTotalTime:
+			self.dieCurrTime += dt
+			if self.dieCurrTime >= self.dieTotalTime:
 				return [-1]
 			else:
 				return [0]
