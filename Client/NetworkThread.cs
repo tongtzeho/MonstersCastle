@@ -63,8 +63,16 @@ public class NetworkThread : MonoBehaviour {
 		EncodeAndSend (sendData);
 	}
 
+	// only called by Game.cs
+	public void SendCommand(short gameResult, short command) {
+		List<byte> result = new List<byte> ();
+		result.AddRange (BitConverter.GetBytes (gameResult));
+		result.AddRange (BitConverter.GetBytes (command));
+		EncodeAndSend (result.ToArray ());
+	}
+
 	void Update () {
-		if (game.IsStart () && game.IsInitialized ()) {
+		if (game.IsStart () && game.IsInitialized () && !game.IsGameOver()) {
 			byte[] sendData = game.GetCurrentGameStatus ();
 			EncodeAndSend (sendData);
 		}
@@ -75,7 +83,7 @@ public class NetworkThread : MonoBehaviour {
 			String decodeString = Encoding.ASCII.GetString (msg.content);
 			login.GetResultFromServer (decodeString);
 		} else { // game state from server
-			if (game.IsStart ()) {
+			if (game.IsStart () && !game.IsGameOver()) {
 				game.AppendGameStatusFromServer(msg.content);
 			}
 		}

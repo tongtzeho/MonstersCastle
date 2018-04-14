@@ -19,6 +19,10 @@ public class GhostPool : MonoBehaviour {
 		}
 	}
 
+	public void Reset() {
+		RecycleUnusedGhosts (new HashSet<int> ());
+	}
+
 	public byte[] Serialize() {
 		List<byte> result = new List<byte> ();
 		if (activeGhost.Count == 0) {

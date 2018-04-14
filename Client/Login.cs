@@ -19,6 +19,7 @@ public class Login : MonoBehaviour {
 
 	private int loginResult = -1;
 	private int registerResult = -1;
+	private bool logoutResult = false;
 
 	void Start () {
 		startPanel.SetActive (true);
@@ -33,11 +34,16 @@ public class Login : MonoBehaviour {
 			} else if (decode [2] == 'u') {
 				registerResult = decode [3] - '0';
 			}
+		} else if (decode [0] == '$' && decode [1] == 'l' && decode [2] == 'o' && decode [3] == 't') {
+			logoutResult = true;
 		}
 	}
 
 	void Update () {
-		if (loginResult == 0) {
+		if (logoutResult) {
+			Start ();
+			logoutResult = false;
+		} else if (loginResult == 0) {
 			StartGame ();
 		} else {
 			if (loginResult == 1) {

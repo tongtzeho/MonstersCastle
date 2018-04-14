@@ -12,11 +12,16 @@ public class Game : MonoBehaviour {
 
 	private bool isStart = false;
 	private GameState gameState = GameState.Init;
+	private short gameResult = 0; // 0 for playing, 1 for win, 2 for lose
 	private List<byte[]> recvDataList = new List<byte[]>();
 
 	public Character character; // assigned in editor
 	public Brute brute; // assigned in editor
 	public GhostPool ghostPool; // assigned in editor
+	public Control control; // assigned in editor
+	public GameUI gameUI; // assigned in editor
+
+	public NetworkThread networkThread; // assigned in editor
 
 	private HashSet<int> usedGhostServerId = new HashSet<int>();
 
@@ -28,13 +33,42 @@ public class Game : MonoBehaviour {
 		return gameState == GameState.Run;
 	}
 
+	public bool IsGameOver() {
+		return gameResult != 0;
+	}
+
+	// called by GameUI.cs
+	public void SendAgain() {
+		Reset ();
+		networkThread.SendCommand (gameResult, 1);
+		// when socket received a msg '$si0', Login.cs will start a new game
+	}
+
+	// called by GameUI.cs
+	public void SendLogout() {
+		Reset ();
+		networkThread.SendCommand (gameResult, 2);
+		// when socket received a msg '$lot', Login.cs will raise the start panel
+	}
+
 	// called by Login.cs
 	public void StartGame() {
-		GameObject character = GameObject.Find ("Character");
-		character.AddComponent<Control> ();
-		GameObject bulletText = GameObject.Find ("BulletText");
-		bulletText.AddComponent<BulletInfo> ();
+		Reset ();
+		control.Allow ();
+		gameUI.StartGame ();
+		gameResult = 0;
 		isStart = true;
+	}
+
+	public void Reset() {
+		isStart = false;
+		ghostPool.Reset ();
+		control.Reset ();
+		control.Disallow ();
+		gameState = GameState.Init;
+		lock (recvDataList) {
+			recvDataList.Clear ();
+		}
 	}
 
 	void Update () {
@@ -44,29 +78,37 @@ public class Game : MonoBehaviour {
 			recvDataList.Clear ();
 		}
 		for (int i = 0; i < recvDataArray.Length; ++i) {
-			int offset = 0;
-			short characterDataLen = BitConverter.ToInt16 (recvDataArray [i], offset);
-			character.UpdateFromServer (gameState == GameState.Init, recvDataArray [i], offset + 2, (int)characterDataLen);
-			offset += 2 + characterDataLen;
-			short bruteDataLen = BitConverter.ToInt16 (recvDataArray [i], offset);
-			brute.UpdateFromServer (gameState == GameState.Init, recvDataArray [i], offset + 2, (int)bruteDataLen);
-			offset += 2 + bruteDataLen;
-			short ghostDataLen = BitConverter.ToInt16 (recvDataArray [i], offset);
-			short ghostDataByte = BitConverter.ToInt16 (recvDataArray [i], offset + 2);
-			offset += 4;
-			usedGhostServerId.Clear ();
-			for (int j = 0; j < ghostDataLen; ++j) {
-				short ghostServerId = BitConverter.ToInt16 (recvDataArray [i], offset);
-				short ghostHp = BitConverter.ToInt16 (recvDataArray [i], offset + 2);
-				Ghost ghost = ghostPool.GetGhostFromServerId ((int)ghostServerId, ghostHp);
-				if (ghost != null) {
-					ghost.UpdateFromServer (recvDataArray [i], offset, ghostDataByte);
+			gameResult = BitConverter.ToInt16 (recvDataArray [i], 0);
+			short level = BitConverter.ToInt16 (recvDataArray [i], 2);
+			short gateHp = BitConverter.ToInt16 (recvDataArray [i], 4);
+			if (gameResult == 1) {
+				Reset ();
+				gameUI.Victory ();
+			} else {
+				int offset = 6;
+				short characterDataLen = BitConverter.ToInt16 (recvDataArray [i], offset);
+				character.UpdateFromServer (gameState == GameState.Init, recvDataArray [i], offset + 2, (int)characterDataLen);
+				offset += 2 + characterDataLen;
+				short bruteDataLen = BitConverter.ToInt16 (recvDataArray [i], offset);
+				brute.UpdateFromServer (gameState == GameState.Init, recvDataArray [i], offset + 2, (int)bruteDataLen);
+				offset += 2 + bruteDataLen;
+				short ghostDataLen = BitConverter.ToInt16 (recvDataArray [i], offset);
+				short ghostDataByte = BitConverter.ToInt16 (recvDataArray [i], offset + 2);
+				offset += 4;
+				usedGhostServerId.Clear ();
+				for (int j = 0; j < ghostDataLen; ++j) {
+					short ghostServerId = BitConverter.ToInt16 (recvDataArray [i], offset);
+					short ghostHp = BitConverter.ToInt16 (recvDataArray [i], offset + 2);
+					Ghost ghost = ghostPool.GetGhostFromServerId ((int)ghostServerId, ghostHp);
+					if (ghost != null) {
+						ghost.UpdateFromServer (recvDataArray [i], offset, ghostDataByte);
+					}
+					offset += ghostDataByte;
+					usedGhostServerId.Add (ghostServerId);
 				}
-				offset += ghostDataByte;
-				usedGhostServerId.Add (ghostServerId);
+				ghostPool.RecycleUnusedGhosts (usedGhostServerId);
+				gameState = GameState.Run;
 			}
-			ghostPool.RecycleUnusedGhosts (usedGhostServerId);
-			gameState = GameState.Run;
 		}
 	}
 
@@ -79,6 +121,8 @@ public class Game : MonoBehaviour {
 
 	public byte[] GetCurrentGameStatus() {
 		List<byte> result = new List<byte> ();
+		result.AddRange (BitConverter.GetBytes ((short)0));
+		result.AddRange (BitConverter.GetBytes ((short)0));
 		byte[] characterResult = character.Serialize ();
 		result.AddRange (BitConverter.GetBytes ((short)characterResult.Length));
 		result.AddRange (characterResult);

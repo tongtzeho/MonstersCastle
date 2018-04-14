@@ -29,7 +29,6 @@ public class Hit : MonoBehaviour {
 				}
 			}
 		}
-		Debug.Log (colliderTable.Count);
 	}
 
 	public void HitCollider(short atk, Collider collider) {

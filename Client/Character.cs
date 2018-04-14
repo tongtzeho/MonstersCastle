@@ -13,8 +13,11 @@ public class Character : MonoBehaviour {
 	public Gun submachine; // assigned in editor
 	public short[] prop = new short[4];
 	public float[] buffTimeLeft = new float[3];
+	private Control control;
 
-	private Control control = null;
+	void Start() {
+		control = GetComponent<Control> ();
+	}
 
 	public byte[] Serialize() {
 		List<byte> result = new List<byte> ();
