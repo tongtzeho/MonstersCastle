@@ -4,8 +4,9 @@
 import struct, time, random, math
 
 class ghost:
-	def __init__(self, id, bornPoint): # [0, 1, 2] for [Left, Mid, Right]
+	def __init__(self, id, bornPoint, height): # [0, 1, 2] for [Left, Mid, Right]
 		self.debug = True
+		self.height = height
 		self.id = id
 		self.hp = 150
 		self.maxHp = 150
@@ -32,20 +33,20 @@ class ghost:
 	def setWay(self, bornPoint):
 		if bornPoint == 0:
 			self.checkPoint = [
-				[-30, 50],
-				[-20, 10],
+				[-19.5, 46],
+				[-19.5, 14],
 				[0, 2]
 			]
 		elif bornPoint == 1:
 			self.checkPoint = [
-				[0.2, 50],
-				[0.2, 20],
+				[-6, 49],
+				[0, 30],
 				[0, 2]
 			]
 		else:
 			self.checkPoint = [
-				[30, 50],
-				[20, 10],
+				[14.6, 54],
+				[20, 20],
 				[0, 2]
 			]
 	
@@ -73,7 +74,7 @@ class ghost:
 			self.hp = 0
 			self.position[0] = self.checkPoint[-1][0]
 			self.position[2] = self.checkPoint[-1][1]
-			self.position[1] = 0
+			self.position[1] = self.height.getHeight(self.position[0], self.position[2])
 			self.rotationY = 180.0
 			self.action = 5
 			if self.bombCurrTime == 0:
@@ -88,17 +89,17 @@ class ghost:
 				if self.bornCurrTime == 0:
 					self.position[0] = self.checkPoint[0][0]
 					self.position[2] = self.checkPoint[0][1]
-					self.position[1] = (self.bornCurrTime - self.bornTotalTime)*self.bornVelocity
+					self.position[1] = self.height.getHeight(self.position[0], self.position[2])+(self.bornCurrTime - self.bornTotalTime)*self.bornVelocity
 					self.rotationY = self.getRotationY(self.checkPoint[0][0], self.checkPoint[0][1], self.checkPoint[1][0], self.checkPoint[1][1])
 					self.action = 2
 					self.bornCurrTime += dt
 					return [0]
 				elif self.bornCurrTime < self.bornTotalTime:
-					self.position[1] = (self.bornCurrTime - self.bornTotalTime)*self.bornVelocity
+					self.position[1] = self.height.getHeight(self.position[0], self.position[2])+(self.bornCurrTime - self.bornTotalTime)*self.bornVelocity
 					self.bornCurrTime += dt
 					return [0]
 				else:
-					self.position[1] = 0
+					self.position[1] = self.height.getHeight(self.position[0], self.position[2])
 					self.phase = 0
 					self.velocity = self.getVelocity()
 					return [0]
@@ -107,7 +108,7 @@ class ghost:
 					# if random ... attack, else walk
 					self.position[0] += self.velocity[0]*dt
 					self.position[2] += self.velocity[1]*dt
-					self.position[1] = 0
+					self.position[1] = self.height.getHeight(self.position[0], self.position[2])
 					self.action = 1
 					if (self.position[0]-self.checkPoint[self.phase+1][0])*(self.position[0]-self.checkPoint[self.phase+1][0]) + (self.position[2]-self.checkPoint[self.phase+1][1])*(self.position[2]-self.checkPoint[self.phase+1][1]) <= self.distSqrThreshold:
 						self.phase += 1

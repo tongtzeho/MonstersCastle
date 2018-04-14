@@ -2,7 +2,7 @@
 # Python 2.7.14
 
 import socket, select, os, time, json, struct
-import game, msg
+import game, msg, height
 
 CONNECTION_LIST = [] # Read sockets
 CONNECTION_USERS = {} # Socket-Username (if not logined, username is None)
@@ -34,7 +34,7 @@ def handleGameMonitorData(sock, data):
 		sendMsgToSock(USERS_CONNECTION[username], data[28:])
 	
 def createNewGame(username):
-	PLAYER_GAME[username] = game.game(username, ADDRESS, PORT)
+	PLAYER_GAME[username] = game.game(username, ADDRESS, PORT, HEIGHT)
 	PLAYER_GAME[username].start() # start a client thread as game monitor
 	print ("'%s' create new game" % username)
 
@@ -103,7 +103,17 @@ def handleClientData(sock, data): # handle data received from client (including 
 			handleSignIn(sock, data)
 	else:
 		if connectionUsername in PLAYER_GAME:
-			PLAYER_GAME[connectionUsername].handle(data)
+			handleResult = PLAYER_GAME[connectionUsername].handle(data)
+			if handleResult == 1: # Play Again
+				PLAYER_GAME[connectionUsername].stop()
+				createNewGame(connectionUsername)
+				sendMsgToSock(sock, "$si0")
+			elif handleResult == 2: # Logout
+				PLAYER_GAME[connectionUsername].stop()
+				PLAYER_GAME.pop(connectionUsername)
+				CONNECTION_USERS[sock] = None
+				logout(connectionUsername)
+				sendMsgToSock(sock, "$lot")
 	
 def logout(username):
 	if username != None and username in USERS_CONNECTION:
@@ -111,6 +121,7 @@ def logout(username):
 		USERS_CONNECTION.pop(username)
 	
 if __name__ == "__main__":
+	HEIGHT = height.height("height.bin")
 	USER_DATABASE = loadUserDatabase("user.json")
 	gameSocketServer = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	gameSocketServer.setblocking(False)

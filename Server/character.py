@@ -22,7 +22,7 @@ class character:
 		self.resetPosition()
 		
 	def resetPosition(self):
-		self.position = [0.0, 3.0, 8.0]
+		self.position = [0.0, 5.0, 8.0]
 		self.rotationY = 0.0
 		
 	def die(self):
