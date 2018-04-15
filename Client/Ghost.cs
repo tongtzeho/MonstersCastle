@@ -9,9 +9,13 @@ public class Ghost : MonoBehaviour {
 	public Monster monster = new Monster();
 	public short action;
 	private GhostAnimator ghostAnimator;
+	private bool isDying = false;
+	private BulletPool submachineBulletPool;
+	private Vector3 offsetY = new Vector3(0, 50, 0);
 
 	void Start() {
 		ghostAnimator = GetComponent<GhostAnimator> ();
+		submachineBulletPool = GameObject.Find ("BulletPool").GetComponent<BulletPool> ();
 	}
 
 	public List<byte> Serialize() {
@@ -30,11 +34,13 @@ public class Ghost : MonoBehaviour {
 	public void Enable(short sid, short hp) {
 		serverId = sid;
 		monster.hp = hp;
+		isDying = false;
 		action = 2;
 	}
 
 	public void Disable() {
 		monster.hp = 0;
+		isDying = false;
 		transform.position = new Vector3 (0, -50, -50);
 		action = 2;
 	}
@@ -45,11 +51,22 @@ public class Ghost : MonoBehaviour {
 		if (action == 5) {
 			monster.hp = 0;
 		}
+		if (action == 4) {
+			if (!isDying) { // die by hit at the moment
+				float rm = UnityEngine.Random.value;
+				if (rm < 0.25f) {
+					submachineBulletPool.Occur (transform.position.y < -40.0f ? transform.position + offsetY : transform.position);
+				}
+			}
+			isDying = true;
+		} else {
+			isDying = false;
+		}
 		if (monster.hp > 0) {
 			transform.position = new Vector3 (BitConverter.ToSingle (recvData, beginIndex + 6), BitConverter.ToSingle (recvData, beginIndex + 10), BitConverter.ToSingle (recvData, beginIndex + 14));
 			transform.rotation = Quaternion.Euler (0, BitConverter.ToSingle (recvData, beginIndex + 18), 0);
 		} else {
-			transform.position = new Vector3 (BitConverter.ToSingle (recvData, beginIndex + 6), BitConverter.ToSingle (recvData, beginIndex + 10) - 50.0f, BitConverter.ToSingle (recvData, beginIndex + 14));
+			transform.position = new Vector3 (BitConverter.ToSingle (recvData, beginIndex + 6), BitConverter.ToSingle (recvData, beginIndex + 10), BitConverter.ToSingle (recvData, beginIndex + 14)) - offsetY;
 		}
 		ghostAnimator.SetState (action);
 	}

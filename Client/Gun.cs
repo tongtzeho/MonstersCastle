@@ -17,6 +17,7 @@ public class Gun : MonoBehaviour {
 	private short bulletNum = 0;
 	public short bulletCapacity; // assigned in editor
 	private short bulletOwn = 0;
+	public short bulletLimit; // assigned in editor
 	private Camera parent;
 	private Ray fireRay;
 	private RaycastHit hitResult;
@@ -72,6 +73,13 @@ public class Gun : MonoBehaviour {
 
 	public void SetBulletOwn(short bo) {
 		bulletOwn = bo;
+	}
+
+	public void AddBulletOwn(short abo) {
+		bulletOwn += abo;
+		if (bulletOwn > bulletLimit) {
+			bulletOwn = bulletLimit;
+		}
 	}
 
 	private bool Fire() {
