@@ -19,7 +19,7 @@ class game(threading.Thread): # run as a game monitor client
 	def initGame(self):
 		self.gameLock.acquire()
 		self.character = character.character()
-		self.brute = brute.brute()
+		self.brute = brute.brute(self.height)
 		self.ghosts = {}
 		self.ghostId = 1
 		self.ghostMax = 2000

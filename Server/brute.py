@@ -4,8 +4,9 @@
 import struct, time
 
 class brute:
-	def __init__(self):
+	def __init__(self, height):
 		self.debug = False
+		self.height = height
 		self.level = 0
 		self.maxHp = [300, 600, 900, 1200, 1500]
 		self.atk = [100, 200, 300, 400, 500]
@@ -14,11 +15,11 @@ class brute:
 		self.position = [0.0, 0.0, 0.0]
 		self.rotationY = 0.0
 		self.action = 2 # 0 for born, 1 for walk, 2 for idle, 3 for attack, 4 for die
-		self.rebornPosition = [0.0, 0.0, 50.0]
-		self.rebornRotationY = 180.0
-		self.velocity = [0.0, 0.0, -4.0]
+		self.rebornPosition = [2.5, 54.0]
+		self.rebornRotationY = 178.246
+		self.velocity = [-0.125, -4.083333333] # to [1, 5]
+		self.walkTime = 12.0
 		self.rebornTime = 1.733
-		self.walkTime = 11.0
 		
 	def reborn(self):
 		if self.level >= len(self.maxHp):
@@ -26,8 +27,8 @@ class brute:
 		self.isAlive = 1
 		self.hp = self.maxHp[self.level]
 		self.position[0] = self.rebornPosition[0]
-		self.position[1] = self.rebornPosition[1]
-		self.position[2] = self.rebornPosition[2]
+		self.position[2] = self.rebornPosition[1]
+		self.position[1] = self.height.getHeight(self.position[0], self.position[2])
 		self.rotationY = self.rebornRotationY
 		self.action = 0
 		self.lifeTime = 0
@@ -48,8 +49,8 @@ class brute:
 				elif self.lifeTime <= self.rebornTime + self.walkTime:
 					self.action = 1
 					self.position[0] += self.velocity[0]*dt
-					self.position[1] += self.velocity[1]*dt
-					self.position[2] += self.velocity[2]*dt
+					self.position[2] += self.velocity[1]*dt
+					self.position[1] = self.height.getHeight(self.position[0], self.position[2])
 				else:
 					self.action = 2
 		if self.debug:

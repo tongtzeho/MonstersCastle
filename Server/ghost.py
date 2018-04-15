@@ -16,7 +16,6 @@ class ghost:
 		self.scalarVelocity = 2.0
 		self.setWay(bornPoint)
 		self.phase = -1
-		self.distSqrThreshold = 0.08*0.08
 		self.bornCurrTime = 0
 		self.bornTotalTime = 1
 		self.bornVelocity = 1
@@ -32,23 +31,32 @@ class ghost:
 		
 	def setWay(self, bornPoint):
 		if bornPoint == 0:
-			self.checkPoint = [
-				[-19.5, 46],
-				[-19.5, 14],
-				[0, 2]
-			]
+			if random.random() < 0.5:
+				self.checkPoint = [
+					[-19.5, 46], [-21.2, 43], [-21.2, 17], [-17.4, 13.2], [-12.5, 13.2], [-8.5, 6.8], [-2.5, 1.8]
+				]
+			else:
+				self.checkPoint = [
+					[-19.5, 46], [-17.8, 43], [-17.8, 16], [-17.1, 14.7], [-9, 14.7], [-1.5, 1.8]
+				]
 		elif bornPoint == 1:
-			self.checkPoint = [
-				[-6, 49],
-				[0, 30],
-				[0, 2]
-			]
+			if random.random() < 0.5:
+				self.checkPoint = [
+					[-6, 49], [-5, 16], [-1, 1.8]
+				]
+			else:
+				self.checkPoint = [
+					[-6, 49], [-2, 43], [-0.5, 1.8]
+				]
 		else:
-			self.checkPoint = [
-				[14.6, 54],
-				[20, 20],
-				[0, 2]
-			]
+			if random.random() < 0.5:
+				self.checkPoint = [
+					[14.6, 54], [16, 40], [15, 17], [9, 7], [2.5, 1.8]
+				]
+			else:
+				self.checkPoint = [
+					[14.6, 54], [13.5, 46], [9, 34], [7, 18], [1.7, 1.8]
+				]
 	
 	def getRotationY(self, x0, z0, x1, z1): # from [x0, z0] to [x1, z1]
 		dx = x1 - x0
@@ -106,11 +114,13 @@ class ghost:
 			else:
 				if self.attackCurrTime == 0: # attack, or walk from checkPoint[phase] to checkPoint[phase+1]
 					# if random ... attack, else walk
+					oldDistSqr = (self.position[0]-self.checkPoint[self.phase+1][0])*(self.position[0]-self.checkPoint[self.phase+1][0]) + (self.position[2]-self.checkPoint[self.phase+1][1])*(self.position[2]-self.checkPoint[self.phase+1][1])
 					self.position[0] += self.velocity[0]*dt
 					self.position[2] += self.velocity[1]*dt
 					self.position[1] = self.height.getHeight(self.position[0], self.position[2])
+					newDistSqr = (self.position[0]-self.checkPoint[self.phase+1][0])*(self.position[0]-self.checkPoint[self.phase+1][0]) + (self.position[2]-self.checkPoint[self.phase+1][1])*(self.position[2]-self.checkPoint[self.phase+1][1])
 					self.action = 1
-					if (self.position[0]-self.checkPoint[self.phase+1][0])*(self.position[0]-self.checkPoint[self.phase+1][0]) + (self.position[2]-self.checkPoint[self.phase+1][1])*(self.position[2]-self.checkPoint[self.phase+1][1]) <= self.distSqrThreshold:
+					if oldDistSqr < newDistSqr: # already arrived at checkPoint[phase+1]
 						self.phase += 1
 						if self.phase < len(self.checkPoint) - 1:
 							self.velocity = self.getVelocity()

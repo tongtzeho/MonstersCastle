@@ -22,4 +22,4 @@ class height:
 		else:
 			indexX = int((x-self.minX)*self.dx)
 			indexZ = int((z-self.minZ)*self.dz)
-			return (self.height[indexX][indexZ]+self.height[indexX+1][indexZ]+self.height[indexX][indexZ+1]+self.height[indexX+1][indexZ+1]) * 0.25
+			return self.height[indexX][indexZ]
