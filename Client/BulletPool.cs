@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -9,9 +10,12 @@ public class BulletPool : MonoBehaviour {
 	public Gun gun;
 	public short addBulletOwn;
 
+	private AudioSource pickupSound;
+
 	private Transform character;
 	private Transform[] bullets;
 	private Queue<int> freeBullets = new Queue<int>();
+	private float enqueueThresholdY = -40;
 	private Vector3 resetPosition = new Vector3(0, -50, 0);
 	private int poolSize = 10;
 	private int queryId = 0;
@@ -29,6 +33,7 @@ public class BulletPool : MonoBehaviour {
 
 	void Start() {
 		character = GameObject.Find ("Character").transform;
+		pickupSound = GetComponent<AudioSource> ();
 	}
 
 	public void Reset() {
@@ -56,11 +61,37 @@ public class BulletPool : MonoBehaviour {
 				gun.AddBulletOwn (addBulletOwn);
 				bullets[queryId].position = resetPosition;
 				freeBullets.Enqueue (queryId);
+				pickupSound.Play ();
 			}
 			++queryId;
 			if (queryId >= poolSize) {
 				queryId = 0;
 			}
 		}
+	}
+
+	// only updates when firstly connect to a game
+	public void UpdateFromServer (byte[] recvData, int beginIndex, int length) {
+		int num = BitConverter.ToInt16 (recvData, beginIndex);
+		if (num == poolSize) {
+			freeBullets.Clear ();
+			for (int i = 0; i < poolSize; ++i) {
+				bullets [i].position = new Vector3 (BitConverter.ToSingle (recvData, beginIndex + 2 + i * 12), BitConverter.ToSingle (recvData, beginIndex + 6 + i * 12), BitConverter.ToSingle (recvData, beginIndex + 10 + i * 12));
+				if (bullets [i].position.y < enqueueThresholdY) {
+					freeBullets.Enqueue (i);
+				}
+			}
+		}
+	}
+
+	public byte[] Serialize() {
+		List<byte> result = new List<byte> ();
+		result.AddRange (BitConverter.GetBytes ((short)(poolSize)));
+		for (int i = 0; i < poolSize; ++i) {
+			result.AddRange (BitConverter.GetBytes (bullets [i].position.x));
+			result.AddRange (BitConverter.GetBytes (bullets [i].position.y));
+			result.AddRange (BitConverter.GetBytes (bullets [i].position.z));
+		}
+		return result.ToArray ();
 	}
 }

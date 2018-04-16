@@ -11,11 +11,19 @@ public class Ghost : MonoBehaviour {
 	private GhostAnimator ghostAnimator;
 	private bool isDying = false;
 	private BulletPool submachineBulletPool;
+	private BulletPool sniperBulletPool;
 	private Vector3 offsetY = new Vector3(0, 50, 0);
 
 	void Start() {
 		ghostAnimator = GetComponent<GhostAnimator> ();
-		submachineBulletPool = GameObject.Find ("BulletPool").GetComponent<BulletPool> ();
+		BulletPool[] bulletPools = GameObject.Find ("BulletPool").GetComponents<BulletPool> ();
+		if (bulletPools [0].prefabName == "SniperBullet") {
+			sniperBulletPool = bulletPools [0];
+			submachineBulletPool = bulletPools [1];
+		} else {
+			sniperBulletPool = bulletPools [1];
+			submachineBulletPool = bulletPools [0];
+		}
 	}
 
 	public List<byte> Serialize() {
@@ -54,8 +62,10 @@ public class Ghost : MonoBehaviour {
 		if (action == 4) {
 			if (!isDying) { // die by hit at the moment
 				float rm = UnityEngine.Random.value;
-				if (rm < 0.25f) {
+				if (rm < 0.1f) {
 					submachineBulletPool.Occur (transform.position.y < -40.0f ? transform.position + offsetY : transform.position);
+				} else if (rm < 0.2f) {
+					sniperBulletPool.Occur (transform.position.y < -40.0f ? transform.position + offsetY : transform.position);
 				}
 			}
 			isDying = true;

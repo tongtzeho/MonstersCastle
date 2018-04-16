@@ -18,12 +18,25 @@ public class Game : MonoBehaviour {
 	public Character character; // assigned in editor
 	public Brute brute; // assigned in editor
 	public GhostPool ghostPool; // assigned in editor
+	private BulletPool submachineBulletPool;
+	private BulletPool sniperBulletPool;
 	public Control control; // assigned in editor
 	public GameUI gameUI; // assigned in editor
 
 	public NetworkThread networkThread; // assigned in editor
 
 	private HashSet<int> usedGhostServerId = new HashSet<int>();
+
+	void Awake() {
+		BulletPool[] bulletPools = GameObject.Find ("BulletPool").GetComponents<BulletPool> ();
+		if (bulletPools [0].prefabName == "SniperBullet") {
+			sniperBulletPool = bulletPools [0];
+			submachineBulletPool = bulletPools [1];
+		} else {
+			sniperBulletPool = bulletPools [1];
+			submachineBulletPool = bulletPools [0];
+		}
+	}
 
 	public bool IsStart() {
 		return isStart;
@@ -107,6 +120,16 @@ public class Game : MonoBehaviour {
 					usedGhostServerId.Add (ghostServerId);
 				}
 				ghostPool.RecycleUnusedGhosts (usedGhostServerId);
+				short submachineBulletsNum = BitConverter.ToInt16 (recvDataArray [i], offset);
+				if (gameState == GameState.Init) {
+					submachineBulletPool.UpdateFromServer (recvDataArray [i], offset, 2 + 12 * submachineBulletsNum);
+				}
+				offset += 2 + 12 * submachineBulletsNum;
+				short sniperBulletsNum = BitConverter.ToInt16 (recvDataArray [i], offset);
+				if (gameState == GameState.Init) {
+					sniperBulletPool.UpdateFromServer (recvDataArray [i], offset, 2 + 12 * sniperBulletsNum);
+				}
+				offset += 2 + 12 * submachineBulletsNum;
 				gameState = GameState.Run;
 			}
 		}
@@ -130,6 +153,8 @@ public class Game : MonoBehaviour {
 		result.AddRange (BitConverter.GetBytes ((short)bruteResult.Length));
 		result.AddRange (bruteResult);
 		result.AddRange (ghostPool.Serialize ());
+		result.AddRange (submachineBulletPool.Serialize ());
+		result.AddRange (sniperBulletPool.Serialize ());
 		return result.ToArray ();
 	}
 }

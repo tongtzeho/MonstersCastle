@@ -47,6 +47,7 @@ public class Control : MonoBehaviour {
 		if (activeGun != sniper) {
 			SwitchGun ();
 		}
+		cameraTransform.localRotation = Quaternion.Euler (0, 0, 0);
 	}
 
 	public void SwitchGun() {
@@ -77,6 +78,11 @@ public class Control : MonoBehaviour {
 			float rotationY = Input.GetAxis ("Mouse Y");
 			transform.Rotate (0.0f, rotationX, 0.0f);
 			cameraTransform.Rotate (-rotationY, 0.0f, 0.0f);
+			if (cameraTransform.localEulerAngles.x <= 180.0f && cameraTransform.localEulerAngles.x > 85.0f) {
+				cameraTransform.localRotation = Quaternion.Euler (85.0f, 0, 0);
+			} else if (cameraTransform.localEulerAngles.x > 180.0f && cameraTransform.localEulerAngles.x < 275.0f) {
+				cameraTransform.localRotation = Quaternion.Euler (275.0f, 0, 0);
+			}
 			Vector3 velocity;
 			bool isOnGround = characterController.isGrounded;
 			if (!isOnGround) {
