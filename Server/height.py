@@ -1,3 +1,6 @@
+# Monsters Castle Read Scene Height
+# Python 2.7.14
+
 import struct
 
 class height:

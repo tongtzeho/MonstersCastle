@@ -1,4 +1,4 @@
-# TDFPS Ghost (Small Monster)
+# Monsters Castle Ghost (Small Monster)
 # Python 2.7.14
 
 import struct, time, random, math

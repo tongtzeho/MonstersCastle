@@ -1,4 +1,4 @@
-# TDFPS Socket Server
+# Monsters Castle Socket Server
 # Python 2.7.14
 
 import socket, select, os, time, json, struct

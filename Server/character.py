@@ -1,4 +1,4 @@
-# TDFPS Character
+# Monsters Castle Character
 # Python 2.7.14
 
 import struct

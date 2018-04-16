@@ -1,8 +1,8 @@
-# TDFPS Game (As Client Thread)
+# Monsters Castle Game (As Client Thread)
 # Python 2.7.14
 
 import socket, threading, random, struct, time
-import msg, character, brute, ghost
+import msg, character, brute, ghost, bullets
 
 class game(threading.Thread): # run as a game monitor client
 	def __init__(self, username, address, port, height):
@@ -23,6 +23,8 @@ class game(threading.Thread): # run as a game monitor client
 		self.ghosts = {}
 		self.ghostId = 1
 		self.ghostMax = 2000
+		self.submachineBullets = bullets.bullets(10)
+		self.sniperBullets = bullets.bullets(10)
 		self.gameTime = 0
 		self.gameResult = 0 # 0 for playing, 1 for win, 2 for lose
 		self.level = 0
@@ -110,8 +112,10 @@ class game(threading.Thread): # run as a game monitor client
 					ghostsResult += struct.pack("=h", byteGhost)+s
 				else:
 					ghostsResult += g.serialize()
+		submachineBulletsResult = self.submachineBullets.serialize()
+		sniperBulletsResult = self.sniperBullets.serialize()
 		self.gameLock.release()
-		return head + gameCurrStatus + characterResult + bruteResult + ghostsResult
+		return head + gameCurrStatus + characterResult + bruteResult + ghostsResult + submachineBulletsResult + sniperBulletsResult
 		
 	def handle(self, data):
 		ret = 0
@@ -129,7 +133,13 @@ class game(threading.Thread): # run as a game monitor client
 						offset += 2+bruteDataLen
 						ghostsDataSize, ghostsDataByte = struct.unpack("=hh", data[offset:offset+4])
 						ghostsData = data[offset+4:offset+4+ghostsDataSize*ghostsDataByte]
-						offset += 4
+						offset += 4+ghostsDataSize*ghostsDataByte
+						submachineBulletsNum = struct.unpack("=h", data[offset:offset+2])[0]
+						submachineBulletsData = data[offset:offset+2+12*submachineBulletsNum]
+						offset += 2+12*submachineBulletsNum
+						sniperBulletsNum = struct.unpack("=h", data[offset:offset+2])[0]
+						sniperBulletsData = data[offset:offset+2+12*sniperBulletsNum]
+						offset += 2+12*sniperBulletsNum
 						self.gameLock.acquire()
 						try:
 							self.character.handle(characterData)
@@ -140,6 +150,8 @@ class game(threading.Thread): # run as a game monitor client
 								if id in self.ghosts:
 									self.ghosts[id].handle(ghostsData[offset:offset+ghostsDataByte])
 								offset += ghostsDataByte
+							self.submachineBullets.handle(submachineBulletsData)
+							self.sniperBullets.handle(sniperBulletsData)
 						except:
 							print ("game.py handle error")
 							pass

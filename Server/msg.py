@@ -1,4 +1,4 @@
-# Socket Server Message Encode/Decode
+# Monsters Castle Socket Server Message Encode/Decode
 # Python 2.7.14
 
 def encode(message): # add header before msg

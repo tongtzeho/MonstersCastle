@@ -1,4 +1,4 @@
-# TDFPS Brute (Big Monster)
+# Monsters Castle Brute (Big Monster)
 # Python 2.7.14
 
 import struct, time
