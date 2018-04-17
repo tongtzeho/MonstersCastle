@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -6,6 +6,7 @@ public class MonsterHPBar : MonoBehaviour {
 
 	private GameObject hpSliderObject;
 	private UnityEngine.UI.Slider hpSlider;
+	private bool isHpSliderActive = true;
 	private RectTransform hpRect;
 	private Monster monster;
 	private Transform hpBar;
@@ -66,9 +67,16 @@ public class MonsterHPBar : MonoBehaviour {
 
 	void Update () {
 		if (UpdateValue ()) {
-			hpSliderObject.SetActive (UpdateRect ());
+			bool updateRectRet = UpdateRect ();
+			if (isHpSliderActive != updateRectRet) {
+				hpSliderObject.SetActive (updateRectRet);
+				isHpSliderActive = updateRectRet;
+			}
 		} else {
-			hpSliderObject.SetActive (false);
+			if (isHpSliderActive) {
+				hpSliderObject.SetActive (false);
+				isHpSliderActive = false;
+			}
 		}
 	}
 }
