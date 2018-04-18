@@ -10,7 +10,8 @@ public class Gun : MonoBehaviour {
 
 	private GunAnimator gunAnimator;
 	public float fireInterval; // assigned in editor
-	private float fireCD = 0;
+	private float fireAnimationTimeLeft = 0;
+	private float fireCD = 0; // when swtiching gun, fireAnimTimeLeft reset to 0, but fireCD remains
 	public float reloadTime; // assigned in editor
 	private float reloadTimeLeft = 0;
 	private AudioSource fireSound;
@@ -33,6 +34,10 @@ public class Gun : MonoBehaviour {
 	}
 
 	void Update () {
+		fireAnimationTimeLeft -= Time.deltaTime;
+		if (fireAnimationTimeLeft < 0) {
+			fireAnimationTimeLeft = 0;
+		}
 		fireCD -= Time.deltaTime;
 		if (fireCD < 0) {
 			fireCD = 0;
@@ -55,7 +60,7 @@ public class Gun : MonoBehaviour {
 	}
 
 	public void ResetTime() {
-		fireCD = 0;
+		fireAnimationTimeLeft = 0;
 		reloadTimeLeft = 0;
 	}
 
@@ -85,6 +90,7 @@ public class Gun : MonoBehaviour {
 	private bool Fire() {
 		if (fireCD == 0 && bulletNum > 0) {
 			reloadTimeLeft = 0;
+			fireAnimationTimeLeft = fireInterval;
 			fireCD = fireInterval;
 			fireSound.Play ();
 			bulletNum--;
@@ -125,7 +131,7 @@ public class Gun : MonoBehaviour {
 				}
 			} else {
 				if (!pressFire) {
-					if (fireCD != 0) {
+					if (fireAnimationTimeLeft != 0) {
 						return GunState.Fire;
 					} else {
 						fireSound.Stop ();
@@ -136,11 +142,11 @@ public class Gun : MonoBehaviour {
 						}
 					}
 				} else {
-					if (fireCD != 0 || Fire()) {
+					if (fireAnimationTimeLeft != 0 || Fire()) {
 						return GunState.Fire;
-					} else { // Fire() return false, means no bullet, need to reload
+					} else {
 						fireSound.Stop ();
-						if (Reload ()) {
+						if (bulletNum == 0 && Reload ()) { // when pressing Fire with empty bullet
 							return GunState.Reload;
 						} else {
 							return GunState.Idle;

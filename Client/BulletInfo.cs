@@ -10,6 +10,8 @@ public class BulletInfo : MonoBehaviour {
 	private GameObject sniperImage;
 	private GameObject submachineImage;
 	private UnityEngine.UI.Image sniperBulletsImage;
+	private UnityEngine.UI.Image submachineBulletsImageL;
+	private UnityEngine.UI.Image submachineBulletsImageR;
 	private bool isSniperImageActive = true;
 
 	void Start () {
@@ -19,6 +21,8 @@ public class BulletInfo : MonoBehaviour {
 		submachineImage = transform.Find ("SubmachineImage").gameObject;
 		submachineImage.SetActive (false);
 		sniperBulletsImage = transform.Find ("SniperBulletsImage").gameObject.GetComponent<UnityEngine.UI.Image> ();
+		submachineBulletsImageL = transform.Find ("SubmachineBulletsImageL").gameObject.GetComponent<UnityEngine.UI.Image> ();
+		submachineBulletsImageR = transform.Find ("SubmachineBulletsImageR").gameObject.GetComponent<UnityEngine.UI.Image> ();
 	}
 
 	void Update () {
@@ -34,6 +38,8 @@ public class BulletInfo : MonoBehaviour {
 				isSniperImageActive = true;
 			}
 			sniperBulletsImage.fillAmount = ((float)bullet) / bulletCapacity;
+			submachineBulletsImageL.fillAmount = 0.0f;
+			submachineBulletsImageR.fillAmount = 0.0f;
 		} else {
 			if (isSniperImageActive) {
 				sniperImage.SetActive (false);
@@ -41,6 +47,12 @@ public class BulletInfo : MonoBehaviour {
 				isSniperImageActive = false;
 			}
 			sniperBulletsImage.fillAmount = 0.0f;
+			if ((bullet & 1) != 0) {
+				submachineBulletsImageR.fillAmount = ((float)(bullet >> 1)) / (bulletCapacity >> 1);
+				submachineBulletsImageL.fillAmount = ((float)(bullet >> 1) + 1) / (bulletCapacity >> 1);
+			} else {
+				submachineBulletsImageL.fillAmount = submachineBulletsImageR.fillAmount = ((float)(bullet >> 1)) / (bulletCapacity >> 1);
+			}
 		}
 	}
 }
