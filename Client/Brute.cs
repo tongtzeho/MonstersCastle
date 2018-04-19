@@ -11,6 +11,16 @@ public class Brute : MonoBehaviour {
 	public Animator animator; // assigned in editor
 	private float dieAnimationTotalTime = 1.4f;
 	private float dieAnimationCurrTime = 0;
+	private float attackParticlePlayTime = 0.48f;
+	private float attackCurrTime = 0;
+	private ParticleSystem attackParticleSystem;
+	private AudioSource attackSound;
+
+	void Start() {
+		GameObject attackPoint = transform.Find ("AttackParticle").gameObject;
+		attackParticleSystem = attackPoint.GetComponent<ParticleSystem> ();
+		attackSound = attackPoint.GetComponent<AudioSource> ();
+	}
 
 	public byte[] Serialize() {
 		List<byte> result = new List<byte> ();
@@ -40,6 +50,7 @@ public class Brute : MonoBehaviour {
 			transform.rotation = Quaternion.Euler (0, BitConverter.ToSingle (recvData, beginIndex + 20), 0);
 			dieAnimationCurrTime = 0;
 		} else {
+			attackCurrTime = 0;
 			dieAnimationCurrTime += Time.deltaTime;
 			if (dieAnimationCurrTime > dieAnimationTotalTime) {
 				transform.position = new Vector3 (0, -20, -30);
@@ -51,5 +62,16 @@ public class Brute : MonoBehaviour {
 
 	void SetAnimationAction(short action) {
 		animator.SetInteger ("Action", (int)action);
+		if (action == 3 && attackCurrTime == 0) {
+			attackCurrTime = 0.001f;
+		}
+		if (attackCurrTime != 0) {
+			attackCurrTime += Time.deltaTime;
+			if (attackCurrTime >= attackParticlePlayTime) {
+				attackCurrTime = 0;
+				attackParticleSystem.Play ();
+				attackSound.Play ();
+			}
+		}
 	}
 }
