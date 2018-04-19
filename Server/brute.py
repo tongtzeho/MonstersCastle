@@ -17,9 +17,13 @@ class brute:
 		self.action = 2 # 0 for born, 1 for walk, 2 for idle, 3 for attack, 4 for die
 		self.rebornPosition = [2.5, 54.0]
 		self.rebornRotationY = 178.246
-		self.velocity = [-0.125, -4.083333333] # to [1, 5]
-		self.walkTime = 12.0
+		self.velocity = [-0.1071428571, -3.5] # to [1, 5]
+		self.walkTime = 14.0
 		self.rebornTime = 1.733
+		self.attackInterval = 2.5
+		self.attackCD = 1.25
+		self.attackShakeTime = 0.3
+		self.attackShakeTimeLeft = 0
 		
 	def reborn(self):
 		if self.level >= len(self.maxHp):
@@ -33,6 +37,8 @@ class brute:
 		self.action = 0
 		self.lifeTime = 0
 		self.level += 1
+		self.attackCD = self.attackInterval / 2
+		self.attackShakeTimeLeft = 0
 		
 	def die(self):
 		self.isAlive = 0
@@ -52,7 +58,17 @@ class brute:
 					self.position[2] += self.velocity[1]*dt
 					self.position[1] = self.height.getHeight(self.position[0], self.position[2])
 				else:
-					self.action = 2
+					self.attackCD -= dt
+					if self.attackCD <= 0:
+						self.attackCD = self.attackInterval
+						self.attackShakeTimeLeft = self.attackShakeTime
+						self.action = 3
+					else:
+						self.attackShakeTimeLeft -= dt
+						if self.attackShakeTimeLeft < 0:
+							self.action = 2
+						else:
+							self.action = 3
 		if self.debug:
 			self.log()
 			
