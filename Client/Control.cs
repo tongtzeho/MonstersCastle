@@ -133,6 +133,9 @@ public class Control : MonoBehaviour {
 			walkingSound.SetSoundState (characterState);
 			Cursor.visible = false;
 		} else {
+			inactiveGun.GetAnimator ().SetState (CharacterState.Idle, Gun.GunState.Hide);
+			activeGun.GetAnimator ().SetState (CharacterState.Idle, Gun.GunState.Idle);
+			walkingSound.SetSoundState (CharacterState.Idle);
 			Cursor.visible = true;
 		}
 	}

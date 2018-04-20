@@ -6,7 +6,7 @@ public class MonsterHPBar : MonoBehaviour {
 
 	private GameObject hpSliderObject;
 	private UnityEngine.UI.Slider hpSlider;
-	private Monster monster;
+	private MonsterHP monster;
 	private Transform hpBar;
 
 	void Start () {

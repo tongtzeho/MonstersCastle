@@ -22,6 +22,7 @@ public class Game : MonoBehaviour {
 	private BulletPool sniperBulletPool;
 	public Control control; // assigned in editor
 	public GameUI gameUI; // assigned in editor
+	public GameBGM gameBGM; // assigned in editor
 
 	public NetworkThread networkThread; // assigned in editor
 
@@ -69,12 +70,15 @@ public class Game : MonoBehaviour {
 		Reset ();
 		control.Allow ();
 		gameUI.StartGame ();
+		gameBGM.AllStop ();
+		gameBGM.GamePlay (false);
 		gameResult = 0;
 		isStart = true;
 	}
 
 	public void Reset() {
 		isStart = false;
+		gameBGM.AllStop ();
 		ghostPool.Reset ();
 		control.Reset ();
 		control.Disallow ();
@@ -97,6 +101,7 @@ public class Game : MonoBehaviour {
 			if (gameResult == 1) {
 				Reset ();
 				gameUI.Victory ();
+				gameBGM.Victory ();
 			} else {
 				int offset = 6;
 				short characterDataLen = BitConverter.ToInt16 (recvDataArray [i], offset);

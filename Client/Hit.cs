@@ -8,7 +8,7 @@ public class Hit : MonoBehaviour {
 
 	void Start () {
 		GameObject bruteObject = GameObject.Find ("Brute");
-		Monster brute = bruteObject.GetComponent<Brute> ().monster;
+		MonsterHP brute = bruteObject.GetComponent<Brute> ().monster;
 		Collider[] bruteCollider = bruteObject.GetComponentsInChildren<Collider> ();
 		for (int i = 0; i < bruteCollider.Length; ++i) {
 			colliderTable.Add (bruteCollider [i], brute);
@@ -22,7 +22,7 @@ public class Hit : MonoBehaviour {
 				break;
 			} else {
 				++ghostId;
-				Monster monster = ghost.gameObject.GetComponent<Ghost> ().monster;
+				MonsterHP monster = ghost.gameObject.GetComponent<Ghost> ().monster;
 				Collider[] ghostCollider = ghost.gameObject.GetComponents<Collider> ();
 				for (int i = 0; i < ghostCollider.Length; ++i) {
 					colliderTable.Add (ghostCollider [i], monster);
@@ -33,7 +33,7 @@ public class Hit : MonoBehaviour {
 
 	public void HitCollider(short atk, Collider collider) {
 		if (colliderTable.Contains (collider)) {
-			((Monster)colliderTable [collider]).Hit (atk);
+			((MonsterHP)colliderTable [collider]).Hit (atk);
 		}
 	}
 }

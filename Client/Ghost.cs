@@ -6,13 +6,18 @@ using UnityEngine;
 public class Ghost : MonoBehaviour {
 
 	public short serverId;
-	public Monster monster = new Monster();
+	public MonsterHP monster;
 	public short action;
 	private GhostAnimator ghostAnimator;
 	private bool isDying = false;
 	private BulletPool submachineBulletPool;
 	private BulletPool sniperBulletPool;
 	private Vector3 offsetY = new Vector3(0, 50, 0);
+
+	void Awake() {
+		AudioSource hurtSound = GetComponent<AudioSource> ();
+		monster = new MonsterHP (hurtSound, hurtSound);
+	}
 
 	void Start() {
 		ghostAnimator = GetComponent<GhostAnimator> ();

@@ -6,7 +6,7 @@ using UnityEngine;
 public class Brute : MonoBehaviour {
 	public short isAlive = 0;
 	public short level = 0;
-	public Monster monster = new Monster ();
+	public MonsterHP monster;
 	public short action = 0;
 	public Animator animator; // assigned in editor
 	private float dieAnimationTotalTime = 1.4f;
@@ -15,6 +15,12 @@ public class Brute : MonoBehaviour {
 	private float attackCurrTime = 0;
 	private ParticleSystem attackParticleSystem;
 	private AudioSource attackSound;
+	public AudioSource hurtSound; // assigned in editor
+	public AudioSource dieSound; // assigned in editor
+
+	void Awake() {
+		monster = new MonsterHP (hurtSound, dieSound);
+	}
 
 	void Start() {
 		GameObject attackPoint = transform.Find ("AttackParticle").gameObject;
