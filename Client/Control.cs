@@ -20,7 +20,7 @@ public class Control : MonoBehaviour {
 	private const float jumpVelocity = 4.5f;
 	private Gun activeGun;
 	private Gun inactiveGun;
-	private WalkingSound walkingSound;
+	private CharacterSound characterSound;
 	private bool allow = false; // can control
 
 	void Start () {
@@ -32,7 +32,7 @@ public class Control : MonoBehaviour {
 		submachineGun = submachineObject.GetComponent<Gun> ();
 		activeGun = sniper;
 		inactiveGun = submachineGun;
-		walkingSound = GetComponent<WalkingSound> ();
+		characterSound = GetComponent<CharacterSound> ();
 	}
 
 	public void Disallow() {
@@ -41,6 +41,10 @@ public class Control : MonoBehaviour {
 
 	public void Allow() {
 		allow = true;
+	}
+
+	public void SetDeadCamera() {
+		cameraTransform.localRotation = Quaternion.Euler (40, 0, 0);
 	}
 
 	public void Reset() {
@@ -130,12 +134,12 @@ public class Control : MonoBehaviour {
 				characterState = CharacterState.Idle;
 			}
 			activeGun.GetAnimator ().SetState (characterState, gunState);
-			walkingSound.SetSoundState (characterState);
+			characterSound.SetWalkingSoundState (characterState);
 			Cursor.visible = false;
 		} else {
 			inactiveGun.GetAnimator ().SetState (CharacterState.Idle, Gun.GunState.Hide);
-			activeGun.GetAnimator ().SetState (CharacterState.Idle, Gun.GunState.Idle);
-			walkingSound.SetSoundState (CharacterState.Idle);
+			activeGun.GetAnimator ().SetState (CharacterState.Idle, Gun.GunState.Hide);
+			characterSound.SetWalkingSoundState (CharacterState.Idle);
 			Cursor.visible = true;
 		}
 	}

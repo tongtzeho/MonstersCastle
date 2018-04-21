@@ -17,6 +17,7 @@ public class Brute : MonoBehaviour {
 	private AudioSource attackSound;
 	public AudioSource hurtSound; // assigned in editor
 	public AudioSource dieSound; // assigned in editor
+	private bool setAttackAction = false;
 
 	void Awake() {
 		monster = new MonsterHP (hurtSound, dieSound);
@@ -67,7 +68,12 @@ public class Brute : MonoBehaviour {
 	}
 
 	void SetAnimationAction(short action) {
-		animator.SetInteger ("Action", (int)action);
+		if ((!setAttackAction) || action == 4) { // avoid in a frame, set attack at first, and set idle at second
+			animator.SetInteger ("Action", (int)action);
+			if (action == 3) {
+				setAttackAction = true;
+			}
+		}
 		if (action == 3 && attackCurrTime == 0) {
 			attackCurrTime = 0.001f;
 		}
@@ -79,5 +85,9 @@ public class Brute : MonoBehaviour {
 				attackSound.Play ();
 			}
 		}
+	}
+
+	void Update() {
+		setAttackAction = false;
 	}
 }

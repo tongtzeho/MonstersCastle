@@ -30,7 +30,7 @@ public class BulletInfo : MonoBehaviour {
 		short bulletCapacity;
 		short bulletOwn;
 		controlScript.GetBulletInfo (out bullet, out bulletCapacity, out bulletOwn);
-		text.text = bulletCapacity.ToString () + " | " + bulletOwn.ToString ();
+		text.text = string.Concat (bulletCapacity.ToString (), " | ", bulletOwn.ToString ());
 		if (controlScript.GetActiveGun () == sniper) {
 			if (!isSniperImageActive) {
 				sniperImage.SetActive (true);
