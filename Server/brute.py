@@ -68,9 +68,9 @@ class brute:
 						self.action = 3
 						print "Brute[%d] Attack" % self.level
 					else:
-						self.attackShakeTimeLeft -= dt
-						if self.attackShakeTimeLeft < 0 and self.attackShakeTimeLeft + dt >= 0: # attack shake ends at the moment
+						if self.attackShakeTimeLeft > 0 and self.attackShakeTimeLeft - dt <= 0: # attack shake ends at the moment
 							damageToCharacter = self.attack(character)
+						self.attackShakeTimeLeft -= dt
 						self.action = 2
 		if self.debug:
 			self.log()
