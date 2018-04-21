@@ -63,17 +63,24 @@ class game(threading.Thread): # run as a game monitor client
 	def update(self, deltaTime):
 		self.gameLock.acquire()
 		if self.gameResult == 0:
-			self.gameTime += deltaTime
-			self.character.update(deltaTime)
-			self.brute.update(deltaTime)
-			if (self.level == 0 and self.gameTime >= 5) or (self.level >= 1 and self.level <= 4 and self.isBruteDead(10, deltaTime)):
-				self.brute.reborn()
-				self.level += 1
-			elif self.level == 5 and self.brute.isAlive == 0:
-				self.level = 6 # ghost will not born
-			if self.level == 6 and len(self.ghosts) == 0:
-				self.gameResult = 1
-			self.updateGhosts(deltaTime)
+			try:
+				self.gameTime += deltaTime
+				damage = self.brute.update(deltaTime, self.character)
+				if (self.level == 0 and self.gameTime >= 5) or (self.level >= 1 and self.level <= 4 and self.isBruteDead(10, deltaTime)):
+					self.brute.reborn()
+					self.level += 1
+				elif self.level == 5 and self.brute.isAlive == 0:
+					self.level = 6 # ghost will not born
+				if self.level == 6 and len(self.ghosts) == 0:
+					self.gameResult = 1
+				self.updateGhosts(deltaTime)
+				damage = int(damage[0])
+				if damage > 0:
+					self.character.hp -= damage
+					print "Character Hurt {%d}" % damage
+				self.character.update(deltaTime)
+			except:
+				print ("game.py update error")
 		self.gameLock.release()
 		
 	def updateGhosts(self, deltaTime):

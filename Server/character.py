@@ -13,20 +13,24 @@ class character:
 		self.submachineBulletOwn = 200
 		self.prop = [0, 0, 0, 0] # 0 for nothing, 1 for +hp, 2 for barrier, 3 for +atk
 		self.buffTimeLeft = [0.0, 0.0, 0.0]
+		self.rebornTime = 6.0
 		
 	def reborn(self):
 		self.isAlive = 1
 		self.rebornTimeLeft = 0.0
-		self.hp = 1000
-		self.maxHp = 1000
+		self.hp = 100
+		self.maxHp = 100
 		self.resetPosition()
+		print "Character Reborn"
 		
 	def resetPosition(self):
-		self.position = [0.0, 5.0, 8.0]
+		self.position = [0.0, 3.0, 10.0]
 		self.rotationY = 0.0
 		
 	def die(self):
 		self.isAlive = 0
+		self.rebornTimeLeft = self.rebornTime
+		print "Character Die"
 	
 	def update(self, dt):
 		self.buffTimeLeft[0] = max(0, self.buffTimeLeft[0] - dt)
@@ -38,6 +42,7 @@ class character:
 				self.reborn()
 		else: # alive
 			if self.hp <= 0:
+				self.hp = 0
 				self.die()
 		if self.debug:
 			self.log()

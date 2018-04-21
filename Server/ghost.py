@@ -28,6 +28,7 @@ class ghost:
 		self.dieTotalTime = 1
 		self.bombCurrTime = 0
 		self.bombTotalTime = 1
+		print "Ghost(%d) Born" % self.id
 		
 	def setWay(self, bornPoint):
 		if bornPoint == 0:
@@ -87,6 +88,7 @@ class ghost:
 			self.action = 5
 			if self.bombCurrTime == 0:
 				pass # damage to player and gate
+				print "Ghost(%d) Bomb" % self.id
 			self.bombCurrTime += dt
 			if self.bombCurrTime >= self.bombTotalTime:
 				return [-1]
@@ -133,6 +135,7 @@ class ghost:
 			self.action = 4
 			self.dieCurrTime += dt
 			if self.dieCurrTime >= self.dieTotalTime:
+				print "Ghost(%d) Die" % self.id
 				return [-1]
 			else:
 				return [0]

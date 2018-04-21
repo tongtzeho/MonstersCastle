@@ -1,15 +1,15 @@
 # Monsters Castle Brute (Big Monster)
 # Python 2.7.14
 
-import struct, time
+import struct, time, math
 
 class brute:
 	def __init__(self, height):
 		self.debug = False
 		self.height = height
 		self.level = 0
-		self.maxHp = [300, 600, 900, 1200, 1500]
-		self.atk = [100, 200, 300, 400, 500]
+		self.maxHp = [300, 600, 1000, 1500, 2000]
+		self.atk = [100, 150, 200, 250, 300]
 		self.isAlive = 0
 		self.hp = 0
 		self.position = [0.0, 0.0, 0.0]
@@ -22,7 +22,7 @@ class brute:
 		self.rebornTime = 1.733
 		self.attackInterval = 2.5
 		self.attackCD = 1.25
-		self.attackShakeTime = 0.3
+		self.attackShakeTime = 0.48
 		self.attackShakeTimeLeft = 0
 		
 	def reborn(self):
@@ -39,12 +39,15 @@ class brute:
 		self.level += 1
 		self.attackCD = self.attackInterval / 2
 		self.attackShakeTimeLeft = 0
+		print "Brute[%d] Reborn" % self.level
 		
 	def die(self):
 		self.isAlive = 0
 		self.action = 4
+		print "Brute[%d] Die" % self.level
 		
-	def update(self, dt):
+	def update(self, dt, character):
+		damageToCharacter = 0
 		if self.isAlive:
 			if self.hp <= 0:
 				self.die()
@@ -63,14 +66,28 @@ class brute:
 						self.attackCD = self.attackInterval
 						self.attackShakeTimeLeft = self.attackShakeTime
 						self.action = 3
+						print "Brute[%d] Attack" % self.level
 					else:
 						self.attackShakeTimeLeft -= dt
-						if self.attackShakeTimeLeft < 0:
-							self.action = 2
-						else:
-							self.action = 3
+						if self.attackShakeTimeLeft < 0 and self.attackShakeTimeLeft + dt >= 0: # attack shake ends at the moment
+							damageToCharacter = self.attack(character)
+						self.action = 2
 		if self.debug:
 			self.log()
+		return [damageToCharacter]
+		
+	def attack(self, character):
+		if self.isAlive and character.isAlive:
+			dx = self.position[0] - character.position[0]
+			dz = self.position[2] - character.position[2]
+			distSqr = dx*dx+ dz*dz
+			if distSqr >= 529:
+				return 0
+			elif distSqr <= 9:
+				return self.atk[self.level - 1] * 0.1
+			else:
+				return self.atk[self.level - 1] * (23-math.sqrt(distSqr)) * 0.005
+		return 0
 			
 	def handle(self, data):
 		isAlive, level, hp = struct.unpack("=3h", data[:6])
