@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
@@ -7,15 +7,17 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class NetworkThread : MonoBehaviour {
+public class AsyncClient : MonoBehaviour {
 
-	private byte[] sendHead = new byte[4];
-	private byte[] recvData = new byte[4096];
+	public Login login; // assigned in editor
+	public Game game; // assigned in editor
+
+	private byte[] recvData = new byte[8192];
 	private string address = "127.0.0.1";
 	private int port = 9121;
 	private Socket clientSocket;
-	public Login login; // assigned in editor
-	public Game game; // assigned in editor
+	private List<Message> messageQueue = new List<Message>();
+	private List<byte> tail = new List<byte> ();
 
 	private class Message {
 		public int length;
@@ -38,23 +40,25 @@ public class NetworkThread : MonoBehaviour {
 		}
 	}
 
-	void Start () {
+	void Awake () {
 		IPAddress ip = IPAddress.Parse(address);
 		clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-		clientSocket.Connect(new IPEndPoint(ip, port));
-		Thread recvThread = new Thread(new ThreadStart(Receive));
-		recvThread.Name = "Receiver";
-		recvThread.IsBackground = true;
-		recvThread.Start ();
+		clientSocket.BeginConnect(ip, port, asyncResult => {
+			clientSocket.EndConnect(asyncResult);
+			Receive();
+		}, null);
 	}
 
-	void EncodeAndSend(byte[] sendData) {
-		sendHead [0] = 0xed; // encode, same as msg.py
-		sendHead [1] = 0xcb;
-		sendHead [2] = Convert.ToByte (sendData.Length / 256);
-		sendHead [3] = Convert.ToByte (sendData.Length % 256);
-		clientSocket.Send (sendHead);
-		clientSocket.Send (sendData);
+	private void EncodeAndSend(byte[] sendData) {
+		byte[] sendBuf = new byte[4 + sendData.Length];
+		sendBuf [0] = 0xed; // encode, same as msg.py
+		sendBuf [1] = 0xcb;
+		sendBuf [2] = Convert.ToByte (sendData.Length / 256);
+		sendBuf [3] = Convert.ToByte (sendData.Length % 256);
+		sendData.CopyTo (sendBuf, 4);
+		clientSocket.BeginSend (sendBuf, 0, sendBuf.Length, SocketFlags.None, asyncResult => {
+			clientSocket.EndSend(asyncResult);
+		}, null);
 	}
 
 	// only called by Login.cs
@@ -89,15 +93,13 @@ public class NetworkThread : MonoBehaviour {
 		}
 	}
 
-	void Receive() {
-		List<Message> messageQueue = new List<Message>();
-		List<byte> tail = new List<byte> ();
-		while (true) {
-			int recvLen = clientSocket.Receive (recvData);
+	private void Receive() {
+		clientSocket.BeginReceive (recvData, 0, recvData.Length, SocketFlags.None, asyncResult => {
+			int recvLen = clientSocket.EndReceive(asyncResult);
 
-			// same as msg.py enqueue
 			int pos = 0;
 			while (pos < recvLen) {
+
 				if (messageQueue.Count == 0 || messageQueue [messageQueue.Count - 1].length == messageQueue [messageQueue.Count - 1].count) {
 					for (int i = 0; i < recvLen - pos; ++i) {
 						tail.Add (recvData [i + pos]);
@@ -139,7 +141,9 @@ public class NetworkThread : MonoBehaviour {
 					messageQueue.Add (lastMsg);
 				}
 			}
-		}
+
+			Receive();
+		}, null);
 	}
 
 	void OnApplicationQuit() {
