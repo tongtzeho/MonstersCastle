@@ -12,6 +12,7 @@ class game(threading.Thread): # run as a game monitor client
 		self.gameLock = threading.Lock()
 		self.conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		self.conn.connect((address, port))
+		self.conn.setblocking(False)
 		self.username = username
 		self.height = height
 		self.initGame()
@@ -38,7 +39,11 @@ class game(threading.Thread): # run as a game monitor client
 			deltaTime = currTime - self.gameClock
 			if deltaTime > 0.0166666666667: # 60FPS on server
 				self.update(deltaTime)
-				self.conn.send(msg.encode(self.serialize()))
+				sendData = msg.encode(self.serialize())
+				try:
+					self.conn.send(sendData)
+				except:
+					print "game.py send data exception"
 				self.gameClock = currTime
 		self.conn.close()
 		

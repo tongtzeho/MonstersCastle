@@ -7,7 +7,7 @@ def encode(message): # add header before msg
 def decode(message): # parse header
 	if len(message) >= 4 and message[0] == '\xed' and message[1] == '\xcb':
 		l = ord(message[2])*256+ord(message[3])
-		return [True, l, message[4:]]
+		return [True, l, message[4:4+l]] # len(string) <= l
 	else:
 		return [False]
 		

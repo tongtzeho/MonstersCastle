@@ -9,8 +9,8 @@ CONNECTION_USERS = {} # Socket-Username (if not logined, username is None)
 CONNECTION_MSGQUEUE = {} # Socket-MsgQueue [[len, str], tail]
 USERS_CONNECTION = {} # Username-Socket (logined user)
 PLAYER_GAME = {} # Username-Game
-RECV_BUFFER = 4096
-ADDRESS = 'localhost'
+RECV_BUFFER = 8192
+ADDRESS = '127.0.0.1'
 PORT = 9121
 
 def loadUserDatabase(jsonFile): # load user information from json
@@ -124,12 +124,12 @@ if __name__ == "__main__":
 	HEIGHT = height.height("height.bin")
 	USER_DATABASE = loadUserDatabase("user.json")
 	gameSocketServer = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	gameSocketServer.setblocking(False)
 	gameSocketServer.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 	gameSocketServer.bind((ADDRESS, PORT))
-	gameSocketServer.listen(100)
+	gameSocketServer.listen(1000)
+	gameSocketServer.setblocking(False)
 	CONNECTION_LIST.append(gameSocketServer)
-	print ("TDFPS server starting on port %d" % PORT)
+	print ("Welcome to Monsters Castle (Server) on %s:%d" % (ADDRESS, PORT))
 	
 	while True:
 		readSockets, writeSockets, errSockets = select.select(CONNECTION_LIST, [], [])
