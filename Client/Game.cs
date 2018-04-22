@@ -13,7 +13,7 @@ public class Game : MonoBehaviour {
 	private bool isStart = false;
 	private GameState gameState = GameState.Init;
 	private short gameResult = 0; // 0 for playing, 1 for win, 2 for lose
-	private List<byte[]> recvDataList = new List<byte[]>();
+	private Queue<byte[]> recvQueue = new Queue<byte[]>();
 
 	public Character character; // assigned in editor
 	public Brute brute; // assigned in editor
@@ -24,7 +24,7 @@ public class Game : MonoBehaviour {
 	public GameUI gameUI; // assigned in editor
 	public GameBGM gameBGM; // assigned in editor
 
-	public NetworkThread networkThread; // assigned in editor
+	public AsyncClient client; // assigned in editor
 
 	private HashSet<int> usedGhostServerId = new HashSet<int>();
 
@@ -54,14 +54,14 @@ public class Game : MonoBehaviour {
 	// called by GameUI.cs
 	public void SendAgain() {
 		Reset ();
-		networkThread.SendCommand (gameResult, 1);
+		client.SendCommand (gameResult, 1);
 		// when socket received a msg '$si0', Login.cs will start a new game
 	}
 
 	// called by GameUI.cs
 	public void SendLogout() {
 		Reset ();
-		networkThread.SendCommand (gameResult, 2);
+		client.SendCommand (gameResult, 2);
 		// when socket received a msg '$lot', Login.cs will raise the start panel
 	}
 
@@ -83,56 +83,50 @@ public class Game : MonoBehaviour {
 		control.Reset ();
 		control.Disallow ();
 		gameState = GameState.Init;
-		lock (recvDataList) {
-			recvDataList.Clear ();
-		}
+		recvQueue.Clear ();
 	}
 
 	void Update () {
-		byte[][] recvDataArray;
-		lock (recvDataList) {
-			recvDataArray = recvDataList.ToArray ();
-			recvDataList.Clear ();
-		}
-		for (int i = 0; i < recvDataArray.Length; ++i) {
-			gameResult = BitConverter.ToInt16 (recvDataArray [i], 0);
-			short level = BitConverter.ToInt16 (recvDataArray [i], 2);
-			short gateHp = BitConverter.ToInt16 (recvDataArray [i], 4);
+		while (recvQueue.Count > 0) {
+			byte[] recvData = recvQueue.Dequeue ();
+			gameResult = BitConverter.ToInt16 (recvData, 0);
+			short level = BitConverter.ToInt16 (recvData, 2);
+			short gateHp = BitConverter.ToInt16 (recvData, 4);
 			if (gameResult == 1) {
 				Reset ();
 				gameUI.Victory ();
 				gameBGM.Victory ();
 			} else {
 				int offset = 6;
-				short characterDataLen = BitConverter.ToInt16 (recvDataArray [i], offset);
-				character.UpdateFromServer (gameState == GameState.Init, recvDataArray [i], offset + 2, (int)characterDataLen);
+				short characterDataLen = BitConverter.ToInt16 (recvData, offset);
+				character.UpdateFromServer (gameState == GameState.Init, recvData, offset + 2, (int)characterDataLen);
 				offset += 2 + characterDataLen;
-				short bruteDataLen = BitConverter.ToInt16 (recvDataArray [i], offset);
-				brute.UpdateFromServer (gameState == GameState.Init, recvDataArray [i], offset + 2, (int)bruteDataLen);
+				short bruteDataLen = BitConverter.ToInt16 (recvData, offset);
+				brute.UpdateFromServer (gameState == GameState.Init, recvData, offset + 2, (int)bruteDataLen);
 				offset += 2 + bruteDataLen;
-				short ghostDataLen = BitConverter.ToInt16 (recvDataArray [i], offset);
-				short ghostDataByte = BitConverter.ToInt16 (recvDataArray [i], offset + 2);
+				short ghostDataLen = BitConverter.ToInt16 (recvData, offset);
+				short ghostDataByte = BitConverter.ToInt16 (recvData, offset + 2);
 				offset += 4;
 				usedGhostServerId.Clear ();
 				for (int j = 0; j < ghostDataLen; ++j) {
-					short ghostServerId = BitConverter.ToInt16 (recvDataArray [i], offset);
-					short ghostHp = BitConverter.ToInt16 (recvDataArray [i], offset + 2);
+					short ghostServerId = BitConverter.ToInt16 (recvData, offset);
+					short ghostHp = BitConverter.ToInt16 (recvData, offset + 2);
 					Ghost ghost = ghostPool.GetGhostFromServerId ((int)ghostServerId, ghostHp);
 					if (ghost != null) {
-						ghost.UpdateFromServer (recvDataArray [i], offset, ghostDataByte);
+						ghost.UpdateFromServer (recvData, offset, ghostDataByte);
 					}
 					offset += ghostDataByte;
 					usedGhostServerId.Add (ghostServerId);
 				}
 				ghostPool.RecycleUnusedGhosts (usedGhostServerId);
-				short submachineBulletsNum = BitConverter.ToInt16 (recvDataArray [i], offset);
+				short submachineBulletsNum = BitConverter.ToInt16 (recvData, offset);
 				if (gameState == GameState.Init) {
-					submachineBulletPool.UpdateFromServer (recvDataArray [i], offset, 2 + 12 * submachineBulletsNum);
+					submachineBulletPool.UpdateFromServer (recvData, offset, 2 + 12 * submachineBulletsNum);
 				}
 				offset += 2 + 12 * submachineBulletsNum;
-				short sniperBulletsNum = BitConverter.ToInt16 (recvDataArray [i], offset);
+				short sniperBulletsNum = BitConverter.ToInt16 (recvData, offset);
 				if (gameState == GameState.Init) {
-					sniperBulletPool.UpdateFromServer (recvDataArray [i], offset, 2 + 12 * sniperBulletsNum);
+					sniperBulletPool.UpdateFromServer (recvData, offset, 2 + 12 * sniperBulletsNum);
 				}
 				offset += 2 + 12 * submachineBulletsNum;
 				gameState = GameState.Run;
@@ -142,9 +136,7 @@ public class Game : MonoBehaviour {
 
 	// called by NetworkThread.Receive
 	public void AppendGameStatusFromServer(byte[] recvData) {
-		lock (recvDataList) {
-			recvDataList.Add (recvData);
-		}
+		recvQueue.Enqueue (recvData);
 	}
 
 	public byte[] GetCurrentGameStatus() {

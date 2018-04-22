@@ -60,7 +60,7 @@ public class Brute : MonoBehaviour {
 			attackCurrTime = 0;
 			dieAnimationCurrTime += Time.deltaTime;
 			if (dieAnimationCurrTime > dieAnimationTotalTime) {
-				transform.position = new Vector3 (0, -20, -30);
+				transform.position = new Vector3 (transform.position.x, -5, transform.position.z);
 			}
 		}
 		action = BitConverter.ToInt16 (recvData, beginIndex + 24);

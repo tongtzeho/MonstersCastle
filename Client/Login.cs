@@ -15,7 +15,7 @@ public class Login : MonoBehaviour {
 	public UnityEngine.UI.InputField registerUsername;
 	public UnityEngine.UI.InputField registerPassword;
 	public UnityEngine.UI.Text registerHint;
-	public NetworkThread networkThread;
+	public AsyncClient client;
 
 	private int loginResult = -1;
 	private int registerResult = -1;
@@ -98,7 +98,7 @@ public class Login : MonoBehaviour {
 		} else if (!IsValidPassword (loginPassword.text)) {
 			loginHint.text = "无效的密码";
 		} else {
-			networkThread.SendString ("$si " + loginUsername.text + " " + loginPassword.text);
+			client.SendString ("$si " + loginUsername.text + " " + loginPassword.text);
 		}
 	}
 
@@ -108,7 +108,7 @@ public class Login : MonoBehaviour {
 		} else if (!IsValidPassword (registerPassword.text)) {
 			registerHint.text = "无效的密码";
 		} else {
-			networkThread.SendString ("$su " + registerUsername.text + " " + registerPassword.text);
+			client.SendString ("$su " + registerUsername.text + " " + registerPassword.text);
 		}
 	}
 

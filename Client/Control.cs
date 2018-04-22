@@ -20,6 +20,7 @@ public class Control : MonoBehaviour {
 	private const float jumpVelocity = 4.5f;
 	private Gun activeGun;
 	private Gun inactiveGun;
+	private Sniper sniperSight;
 	private CharacterSound characterSound;
 	private bool allow = false; // can control
 
@@ -28,6 +29,7 @@ public class Control : MonoBehaviour {
 		cameraTransform = transform.Find ("Camera");
 		GameObject sniperObject = transform.Find ("Camera/sniper").gameObject;
 		sniper = sniperObject.GetComponent<Gun> ();
+		sniperSight = sniperObject.GetComponent<Sniper> ();
 		GameObject submachineObject = transform.Find ("Camera/submachinegun").gameObject;
 		submachineGun = submachineObject.GetComponent<Gun> ();
 		activeGun = sniper;
@@ -45,6 +47,7 @@ public class Control : MonoBehaviour {
 
 	public void SetDeadCamera() {
 		cameraTransform.localRotation = Quaternion.Euler (40, 0, 0);
+		sniperSight.SetADS (false);
 	}
 
 	public void Reset() {
@@ -52,6 +55,7 @@ public class Control : MonoBehaviour {
 			SwitchGun ();
 		}
 		cameraTransform.localRotation = Quaternion.Euler (0, 0, 0);
+		sniperSight.SetADS (false);
 	}
 
 	public void SwitchGun() {
@@ -80,6 +84,10 @@ public class Control : MonoBehaviour {
 			Gun.GunState gunState = activeGun.Action (pressFire, pressReload);
 			float rotationX = Input.GetAxis ("Mouse X");
 			float rotationY = Input.GetAxis ("Mouse Y");
+			if (sniperSight.GetADS()) {
+				rotationX *= 0.5f;
+				rotationY *= 0.5f;
+			}
 			transform.Rotate (0.0f, rotationX, 0.0f);
 			cameraTransform.Rotate (-rotationY, 0.0f, 0.0f);
 			if (cameraTransform.localEulerAngles.x <= 180.0f && cameraTransform.localEulerAngles.x > 85.0f) {
@@ -135,11 +143,13 @@ public class Control : MonoBehaviour {
 			}
 			activeGun.GetAnimator ().SetState (characterState, gunState);
 			characterSound.SetWalkingSoundState (characterState);
+			sniperSight.SetADS (activeGun == sniper && characterState != CharacterState.Run && (gunState == Gun.GunState.Fire || gunState == Gun.GunState.Idle) && Input.GetKey (KeyCode.Mouse1));
 			Cursor.visible = false;
 		} else {
 			inactiveGun.GetAnimator ().SetState (CharacterState.Idle, Gun.GunState.Hide);
 			activeGun.GetAnimator ().SetState (CharacterState.Idle, Gun.GunState.Hide);
 			characterSound.SetWalkingSoundState (CharacterState.Idle);
+			sniperSight.SetADS (false);
 			Cursor.visible = true;
 		}
 	}

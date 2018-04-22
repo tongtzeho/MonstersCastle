@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -9,6 +9,7 @@ public class CharacterSound : MonoBehaviour {
 	public AudioSource run;
 	public AudioSource hurt;
 	public AudioSource die;
+	public AudioSource reborn;
 	
 	public void SetWalkingSoundState(Control.CharacterState characterState) {
 		switch (characterState) {
@@ -40,6 +41,12 @@ public class CharacterSound : MonoBehaviour {
 	public void PlayDieSound() {
 		if (!die.isPlaying) {
 			die.Play ();
+		}
+	}
+
+	public void PlayRebornSound() {
+		if (!reborn.isPlaying) {
+			reborn.Play ();
 		}
 	}
 }

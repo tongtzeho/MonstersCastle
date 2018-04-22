@@ -74,6 +74,8 @@ public class Character : MonoBehaviour {
 		}
 		if (isCurrAlive == 0 && isAlive == 1 && !gameInitializing) {
 			characterSound.PlayDieSound ();
+		} else if (isCurrAlive == 1 && (isAlive == 0 || gameInitializing)) {
+			characterSound.PlayRebornSound ();
 		}
 		isAlive = isCurrAlive;
 		rebornTimeLeft = BitConverter.ToSingle (recvData, beginIndex + 2);

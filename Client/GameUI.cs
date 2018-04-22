@@ -5,7 +5,7 @@ using UnityEngine;
 public class GameUI : MonoBehaviour {
 
 	// assigned in editor
-	public GameObject whiteCross;
+	public GameObject sight;
 	public GameObject playerInfo;
 	public GameObject victory;
 	public Game game;
@@ -15,19 +15,19 @@ public class GameUI : MonoBehaviour {
 	}
 
 	public void HideAll() {
-		whiteCross.SetActive (false);
+		sight.SetActive (false);
 		playerInfo.SetActive (false);
 		victory.SetActive (false);
 	}
 
 	public void StartGame() {
-		whiteCross.SetActive (true);
+		sight.SetActive (true);
 		playerInfo.SetActive (true);
 		victory.SetActive (false);
 	}
 
 	public void Victory() {
-		whiteCross.SetActive (false);
+		sight.SetActive (false);
 		playerInfo.SetActive (false);
 		victory.SetActive (true);
 	}
