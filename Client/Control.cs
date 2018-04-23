@@ -21,6 +21,7 @@ public class Control : MonoBehaviour {
 	private Gun activeGun;
 	private Gun inactiveGun;
 	private Sniper sniperSight;
+	private Recoil recoil = new Recoil ();
 	private CharacterSound characterSound;
 	private bool allow = false; // can control
 
@@ -56,6 +57,7 @@ public class Control : MonoBehaviour {
 		}
 		cameraTransform.localRotation = Quaternion.Euler (0, 0, 0);
 		sniperSight.SetADS (false);
+		recoil.Reset ();
 	}
 
 	public void SwitchGun() {
@@ -81,15 +83,18 @@ public class Control : MonoBehaviour {
 			}
 			bool pressFire = Input.GetKey (KeyCode.Mouse0);
 			bool pressReload = Input.GetKey (KeyCode.R);
-			Gun.GunState gunState = activeGun.Action (pressFire, pressReload);
+			float recoilResult = 0.0f;
+			Gun.GunState gunState = activeGun.Action (pressFire, pressReload, out recoilResult);
+			recoil.AddRecoil (recoilResult);
+			float recover = recoil.Recover (Time.deltaTime);
 			float rotationX = Input.GetAxis ("Mouse X");
 			float rotationY = Input.GetAxis ("Mouse Y");
 			if (sniperSight.GetADS()) {
-				rotationX *= 0.5f;
-				rotationY *= 0.5f;
+				rotationX *= 0.45f;
+				rotationY *= 0.45f;
 			}
 			transform.Rotate (0.0f, rotationX, 0.0f);
-			cameraTransform.Rotate (-rotationY, 0.0f, 0.0f);
+			cameraTransform.Rotate (-rotationY - recoilResult + recover, 0.0f, 0.0f);
 			if (cameraTransform.localEulerAngles.x <= 180.0f && cameraTransform.localEulerAngles.x > 85.0f) {
 				cameraTransform.localRotation = Quaternion.Euler (85.0f, 0, 0);
 			} else if (cameraTransform.localEulerAngles.x > 180.0f && cameraTransform.localEulerAngles.x < 275.0f) {
@@ -150,6 +155,7 @@ public class Control : MonoBehaviour {
 			activeGun.GetAnimator ().SetState (CharacterState.Idle, Gun.GunState.Hide);
 			characterSound.SetWalkingSoundState (CharacterState.Idle);
 			sniperSight.SetADS (false);
+			recoil.Reset ();
 			Cursor.visible = true;
 		}
 	}

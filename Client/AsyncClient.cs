@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
@@ -18,27 +18,6 @@ public class AsyncClient : MonoBehaviour {
 	private Socket clientSocket;
 	private List<Message> messageQueue = new List<Message>();
 	private List<byte> tail = new List<byte> ();
-
-	private class Message {
-		public int length;
-		public int count; // current count
-		public byte[] content;
-		public Message(int len) {
-			length = len;
-			count = 0;
-			content = new byte[len];
-		}
-		public void Append(byte[] newContent, int beginIndex) {
-			for (int i = beginIndex; i < newContent.Length; ++i) {
-				if (count + i - beginIndex >= length) {
-					count = length;
-					return;
-				}
-				content [count + i - beginIndex] = newContent [i];
-			}
-			count += newContent.Length - beginIndex;
-		}
-	}
 
 	void Awake () {
 		IPAddress ip = IPAddress.Parse(address);

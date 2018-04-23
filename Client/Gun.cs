@@ -21,9 +21,11 @@ public class Gun : MonoBehaviour {
 	public short bulletLimit; // assigned in editor
 	private Camera parent;
 	private Ray fireRay;
+	public float diffuse; // assigned in editor
 	private RaycastHit hitResult;
 	private Hit hitSystem;
 	public float attack; // assigned in editor
+	public float recoil; // assigned in editor
 
 	void Start () {
 		gunAnimator = GetComponent<GunAnimator> ();
@@ -87,19 +89,23 @@ public class Gun : MonoBehaviour {
 		}
 	}
 
-	private bool Fire() {
+	private bool Fire(out float recoilResult) {
 		if (fireCD == 0 && bulletNum > 0) {
 			reloadTimeLeft = 0;
 			fireAnimationTimeLeft = fireInterval;
 			fireCD = fireInterval;
 			fireSound.Play ();
 			bulletNum--;
-			fireRay = parent.ScreenPointToRay (new Vector3 (Screen.width / 2.0f, Screen.height / 2.0f, 0));
+			float randomX = UnityEngine.Random.value * 2.0f * diffuse - diffuse;
+			float randomY = UnityEngine.Random.value * 2.0f * diffuse - diffuse;
+			fireRay = parent.ScreenPointToRay (new Vector3 (Screen.width / 2.0f + randomX, Screen.height / 2.0f + randomY, 0));
 			if (Physics.Raycast (fireRay, out hitResult)) {
 				hitSystem.HitCollider ((short)attack, hitResult.collider);
 			}
+			recoilResult = recoil;
 			return true;
 		} else {
+			recoilResult = 0.0f;
 			return false;
 		}
 	}
@@ -114,7 +120,8 @@ public class Gun : MonoBehaviour {
 	}
 
 	// return gun animator state to Control.cs
-	public GunState Action(bool pressFire, bool pressReload) {
+	public GunState Action(bool pressFire, bool pressReload, out float recoilResult) {
+		recoilResult = 0.0f;
 		if (pressReload) {
 			if (reloadTimeLeft != 0 || Reload ()) {
 				fireSound.Stop ();
@@ -124,7 +131,7 @@ public class Gun : MonoBehaviour {
 			}
 		} else {
 			if (reloadTimeLeft != 0) {
-				if (pressFire && Fire ()) { // press Fire while reloading
+				if (pressFire && Fire (out recoilResult)) { // press Fire while reloading
 					return GunState.Fire;
 				} else {
 					return GunState.Reload;
@@ -142,7 +149,7 @@ public class Gun : MonoBehaviour {
 						}
 					}
 				} else {
-					if (fireAnimationTimeLeft != 0 || Fire()) {
+					if (fireAnimationTimeLeft != 0 || Fire(out recoilResult)) {
 						return GunState.Fire;
 					} else {
 						fireSound.Stop ();

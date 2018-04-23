@@ -5,7 +5,7 @@ using UnityEngine;
 public class Sniper : MonoBehaviour {
 
 	private SkinnedMeshRenderer meshRenderer;
-	private Camera camera;
+	private Camera characteCamera;
 	public RectTransform defaultSight; // assigned in editor
 	public RectTransform sniperSight; // assigned in editor
 	private const float sniperSightDefaultHeight = 1080.0f;
@@ -16,7 +16,7 @@ public class Sniper : MonoBehaviour {
 
 	void Start () {
 		meshRenderer = transform.Find ("Springfield").gameObject.GetComponent<SkinnedMeshRenderer> ();
-		camera = transform.parent.gameObject.GetComponent<Camera> ();
+		characteCamera = transform.parent.gameObject.GetComponent<Camera> ();
 		float scale = Screen.height / sniperSightDefaultHeight;
 		sniperSight.localScale = new Vector3 (scale, scale, 1);
 	}
@@ -28,11 +28,11 @@ public class Sniper : MonoBehaviour {
 	public void SetADS(bool a) {
 		ads = a;
 		if (!ads) {
-			camera.fieldOfView = defaultFOV;
+			characteCamera.fieldOfView = defaultFOV;
 			defaultSight.localPosition = Vector3.zero;
 			sniperSight.localPosition = disablePosition;
 		} else {
-			camera.fieldOfView = adsFOV;
+			characteCamera.fieldOfView = adsFOV;
 			meshRenderer.enabled = false;
 			sniperSight.localPosition = Vector3.zero;
 			defaultSight.localPosition = disablePosition;

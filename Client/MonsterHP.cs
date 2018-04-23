@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -9,10 +9,12 @@ public class MonsterHP {
 
 	private AudioSource hurtSound;
 	private AudioSource dieSound;
+	private Skull skull; // kill hint
 
-	public MonsterHP(AudioSource hurt, AudioSource die) {
+	public MonsterHP(AudioSource hurt, AudioSource die, Skull skull) {
 		hurtSound = hurt;
 		dieSound = die;
+		this.skull = skull;
 	}
 
 	public void Hit(short atk) {
@@ -25,6 +27,7 @@ public class MonsterHP {
 				if (!dieSound.isPlaying) {
 					dieSound.Play ();
 				}
+				skull.Activate ();
 			}
 		}
 		hp -= atk;

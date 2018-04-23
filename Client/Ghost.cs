@@ -16,7 +16,8 @@ public class Ghost : MonoBehaviour {
 
 	void Awake() {
 		AudioSource hurtSound = GetComponent<AudioSource> ();
-		monster = new MonsterHP (hurtSound, hurtSound);
+		Skull skull = GameObject.Find ("Skull").GetComponent<Skull> ();
+		monster = new MonsterHP (hurtSound, hurtSound, skull);
 	}
 
 	void Start() {
