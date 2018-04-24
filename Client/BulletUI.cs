@@ -1,8 +1,8 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class BulletInfo : MonoBehaviour {
+public class BulletUI : MonoBehaviour {
 
 	private UnityEngine.UI.Text text;
 	private Control controlScript;
@@ -40,7 +40,7 @@ public class BulletInfo : MonoBehaviour {
 			sniperBulletsImage.fillAmount = ((float)bullet) / bulletCapacity;
 			submachineBulletsImageL.fillAmount = 0.0f;
 			submachineBulletsImageR.fillAmount = 0.0f;
-		} else {
+		} else { // activeGun is submachine
 			if (isSniperImageActive) {
 				sniperImage.SetActive (false);
 				submachineImage.SetActive (true);
