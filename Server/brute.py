@@ -74,7 +74,7 @@ class brute:
 						self.action = 2
 		if self.debug:
 			self.log()
-		return [damageToCharacter]
+		return [damageToCharacter, 0]
 		
 	def attack(self, character):
 		if self.isAlive and character.isAlive:

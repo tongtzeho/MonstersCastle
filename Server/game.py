@@ -24,6 +24,7 @@ class game(threading.Thread): # run as a game monitor client
 		self.ghosts = {}
 		self.ghostId = 1
 		self.ghostMax = 2000
+		self.balls = {}
 		self.submachineBullets = bullets.bullets(10)
 		self.sniperBullets = bullets.bullets(10)
 		self.gameTime = 0
@@ -70,7 +71,8 @@ class game(threading.Thread): # run as a game monitor client
 		if self.gameResult == 0:
 			try:
 				self.gameTime += deltaTime
-				damage = self.brute.update(deltaTime, self.character)
+				damageByBalls = self.updateBalls(deltaTime)
+				damageByBrute = self.brute.update(deltaTime, self.character)
 				if (self.level == 0 and self.gameTime >= 5) or (self.level >= 1 and self.level <= 4 and self.isBruteDead(10, deltaTime)):
 					self.brute.reborn()
 					self.level += 1
@@ -78,8 +80,8 @@ class game(threading.Thread): # run as a game monitor client
 					self.level = 6 # ghost will not born
 				if self.level == 6 and len(self.ghosts) == 0:
 					self.gameResult = 1
-				self.updateGhosts(deltaTime)
-				damage = int(damage[0])
+				damageByGhosts = self.updateGhosts(deltaTime)
+				damage = int(damageByBalls[0]+damageByBrute[0]+damageByGhosts[0])
 				if damage > 0:
 					self.character.hp -= damage
 					print "Character Hurt {%d}" % damage
@@ -87,19 +89,36 @@ class game(threading.Thread): # run as a game monitor client
 			except:
 				print ("game.py update error")
 		self.gameLock.release()
-		
+	
+	def updateBalls(self, deltaTime):
+		damage = [0, 0]
+		delList = []
+		for k, v in self.balls.items():
+			ret = v.update(deltaTime, self.character)
+			if ret[0] == -1:
+				delList.append(k)
+			damage[0] += ret[1]
+		for k in delList:
+			self.balls.pop(k)
+		return damage
+	
 	def updateGhosts(self, deltaTime):
 		if self.gameTime >= 2*self.ghostId and self.gameTime-deltaTime < 2*self.ghostId and self.ghostId <= self.ghostMax and self.level <= 5:
 			bornPoint = int(self.gameTime/2)%3
 			self.ghosts[self.ghostId] = ghost.ghost(self.ghostId, bornPoint, self.height)
 			self.ghostId += 1
+		damage = [0, 0]
 		delList = []
 		for k, v in self.ghosts.items():
-			ret = v.update(deltaTime)
+			ret = v.update(deltaTime, self.character)
 			if ret[0] == -1:
 				delList.append(k)
+			damage[0] += ret[1]
+			if ret[3] != None: # new ball
+				self.balls[ret[3].id] = ret[3]
 		for k in delList:
 			self.ghosts.pop(k)
+		return damage
 		
 	def serialize(self):
 		head = struct.pack("=4s2i16s", "^^^@", self.recog, len(self.username), self.username)
@@ -126,8 +145,20 @@ class game(threading.Thread): # run as a game monitor client
 					ghostsResult += g.serialize()
 		submachineBulletsResult = self.submachineBullets.serialize()
 		sniperBulletsResult = self.sniperBullets.serialize()
+		if len(self.balls) == 0:
+			ballsResult = struct.pack("=hh", 0, 0)
+		else:
+			ballsResult = struct.pack("=h", len(self.balls))
+			byteBall = 0
+			for b in self.balls.values():
+				if byteBall == 0:
+					s = b.serialize()
+					byteBall = len(s)
+					ballsResult += struct.pack("=h", byteBall)+s
+				else:
+					ballsResult += b.serialize()
 		self.gameLock.release()
-		return head + gameCurrStatus + characterResult + bruteResult + ghostsResult + submachineBulletsResult + sniperBulletsResult
+		return head + gameCurrStatus + characterResult + bruteResult + ghostsResult + submachineBulletsResult + sniperBulletsResult + ballsResult
 		
 	def handle(self, data):
 		ret = 0
