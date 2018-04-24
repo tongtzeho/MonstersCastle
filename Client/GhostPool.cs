@@ -5,9 +5,9 @@ using UnityEngine;
 
 public class GhostPool : MonoBehaviour {
 
-	private Hashtable activeGhost = new Hashtable (); // key: GhostId in server, value: GhostId in pool (0 to 39)
-	private Ghost[] ghostPool = new Ghost[40];
-	private Queue freeIndex = new Queue (); // GhostId in pool (0 to 39)
+	private Hashtable activeGhost = new Hashtable (); // key: GhostId in server, value: GhostId in pool (0 to 29)
+	private Ghost[] ghostPool = new Ghost[30];
+	private Queue freeIndex = new Queue (); // GhostId in pool (0 to 29)
 
 	void Awake () {
 		for (int i = 0; i < ghostPool.Length; ++i) {

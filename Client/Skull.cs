@@ -7,7 +7,7 @@ public class Skull : MonoBehaviour {
 	private UnityEngine.UI.RawImage image;
 	private Color zeroAlpha = new Color (1.0f, 1.0f, 1.0f, 0.0f);
 	private Color fullAlpha = new Color (1.0f, 1.0f, 1.0f, 0.8f);
-	private float fadeAlphaPerSecond = 1.0f;
+	private float fadeAlphaPerSecond = 1.3f;
 
 	void Start () {
 		image = GetComponent<UnityEngine.UI.RawImage> ();

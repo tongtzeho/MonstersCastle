@@ -20,13 +20,14 @@ public class Game : MonoBehaviour {
 	public GhostPool ghostPool; // assigned in editor
 	private BulletPool submachineBulletPool;
 	private BulletPool sniperBulletPool;
+	public BallPool ballPool; // assigned in editor
 	public Control control; // assigned in editor
 	public GameUI gameUI; // assigned in editor
 	public GameBGM gameBGM; // assigned in editor
-
 	public AsyncClient client; // assigned in editor
 
 	private HashSet<int> usedGhostServerId = new HashSet<int>();
+	private HashSet<int> usedBallServerId = new HashSet<int>();
 
 	void Awake() {
 		BulletPool[] bulletPools = GameObject.Find ("BulletPool").GetComponents<BulletPool> ();
@@ -80,6 +81,7 @@ public class Game : MonoBehaviour {
 		isStart = false;
 		gameBGM.AllStop ();
 		ghostPool.Reset ();
+		ballPool.Reset ();
 		control.Reset ();
 		control.Disallow ();
 		gameState = GameState.Init;
@@ -129,6 +131,25 @@ public class Game : MonoBehaviour {
 					sniperBulletPool.UpdateFromServer (recvData, offset, 2 + 12 * sniperBulletsNum);
 				}
 				offset += 2 + 12 * submachineBulletsNum;
+				short ballDataLen = BitConverter.ToInt16 (recvData, offset);
+				short ballDataByte = BitConverter.ToInt16 (recvData, offset + 2);
+				offset += 4;
+				usedBallServerId.Clear ();
+				for (int j = 0; j < ballDataLen; ++j) {
+					short ballServerId = BitConverter.ToInt16 (recvData, offset);
+					if (!ballPool.Contains ((int)ballServerId)) {
+						float posX = BitConverter.ToSingle (recvData, offset + 2);
+						float posY = BitConverter.ToSingle (recvData, offset + 6);
+						float posZ = BitConverter.ToSingle (recvData, offset + 10);
+						float velX = BitConverter.ToSingle (recvData, offset + 14);
+						float velY = BitConverter.ToSingle (recvData, offset + 18);
+						float velZ = BitConverter.ToSingle (recvData, offset + 22);
+						ballPool.Create ((int)ballServerId, new Vector3 (posX, posY, posZ), new Vector3 (velX, velY, velZ));
+					}
+					offset += ballDataByte;
+					usedBallServerId.Add (ballServerId);
+				}
+				ballPool.RecycleUnusedBalls (usedBallServerId);
 				gameState = GameState.Run;
 			}
 		}

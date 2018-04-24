@@ -20,9 +20,14 @@ public class GhostAnimator : MonoBehaviour {
 			gunAnimation.Play ("move_forward");
 			break;
 		case 2:
-			gunAnimation.Play ("idle_normal");
+			if (!gunAnimation.IsPlaying ("attack_short_001")) {
+				gunAnimation.Play ("idle_normal");
+			}
 			dieParticle.Stop ();
 			bombParticle.Stop ();
+			break;
+		case 3:
+			gunAnimation.Play ("attack_short_001");
 			break;
 		case 4:
 			gunAnimation.Play ("idle_normal");
