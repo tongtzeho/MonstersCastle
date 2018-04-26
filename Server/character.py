@@ -10,7 +10,7 @@ class character:
 		self.sniperBulletNum = 5
 		self.sniperBulletOwn = 30
 		self.submachineBulletNum = 30
-		self.submachineBulletOwn = 200
+		self.submachineBulletOwn = 150
 		self.prop = [0, 0, 0, 0] # 0 for nothing, 1 for +hp, 2 for barrier, 3 for +atk
 		self.buffTimeLeft = [0.0, 0.0, 0.0]
 		self.rebornTime = 6.0

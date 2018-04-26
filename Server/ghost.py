@@ -21,7 +21,7 @@ class ghost:
 		self.bornTotalTime = 1
 		self.bornVelocity = 1
 		self.attackCurrTime = 0
-		self.attackAimTime = 0.35
+		self.attackAimTime = 0.4
 		self.attackTotalTime = 1.5
 		self.attackId = 0
 		self.attackMax = 15
