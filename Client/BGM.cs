@@ -1,18 +1,14 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class GameBGM : MonoBehaviour {
+public class BGM : MonoBehaviour {
 
 	// assigned in editor
 	public AudioSource gameBGM;
 	public AudioSource powerUpBGM;
 	public AudioSource victoryBGM;
 	public AudioSource defeatBGM;
-
-	void Start () {
-		
-	}
 
 	public void AllStop() {
 		gameBGM.Stop ();
