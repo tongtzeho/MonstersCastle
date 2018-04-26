@@ -1,13 +1,15 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Skull : MonoBehaviour {
+public class FadeImage : MonoBehaviour {
 
 	private UnityEngine.UI.RawImage image;
-	private Color zeroAlpha = new Color (1.0f, 1.0f, 1.0f, 0.0f);
-	private Color fullAlpha = new Color (1.0f, 1.0f, 1.0f, 0.8f);
-	private float fadeAlphaPerSecond = 1.3f;
+
+	// assigned in editor
+	public Color zeroAlpha;
+	public Color fullAlpha;
+	public float fadeAlphaPerSecond;
 
 	void Start () {
 		image = GetComponent<UnityEngine.UI.RawImage> ();
