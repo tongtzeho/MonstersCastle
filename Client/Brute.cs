@@ -20,7 +20,7 @@ public class Brute : MonoBehaviour {
 	private bool setAttackAction = false;
 
 	void Awake() {
-		Skull skull = GameObject.Find ("Skull").GetComponent<Skull> ();
+		FadeImage skull = GameObject.Find ("Skull").GetComponent<FadeImage> ();
 		monster = new MonsterHP (hurtSound, dieSound, skull);
 	}
 

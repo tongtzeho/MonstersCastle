@@ -22,8 +22,8 @@ public class Game : MonoBehaviour {
 	private BulletPool sniperBulletPool;
 	public BallPool ballPool; // assigned in editor
 	public Control control; // assigned in editor
-	public GameUI gameUI; // assigned in editor
-	public GameBGM gameBGM; // assigned in editor
+	public GameUIPanel gameUIPanel; // assigned in editor
+	public BGM gameBGM; // assigned in editor
 	public AsyncClient client; // assigned in editor
 
 	private HashSet<int> usedGhostServerId = new HashSet<int>();
@@ -52,14 +52,14 @@ public class Game : MonoBehaviour {
 		return gameResult != 0;
 	}
 
-	// called by GameUI.cs
+	// called by GameUIPanel.cs
 	public void SendAgain() {
 		Reset ();
 		client.SendCommand (gameResult, 1);
 		// when socket received a msg '$si0', Login.cs will start a new game
 	}
 
-	// called by GameUI.cs
+	// called by GameUIPanel.cs
 	public void SendLogout() {
 		Reset ();
 		client.SendCommand (gameResult, 2);
@@ -70,7 +70,7 @@ public class Game : MonoBehaviour {
 	public void StartGame() {
 		Reset ();
 		control.Allow ();
-		gameUI.StartGame ();
+		gameUIPanel.StartGame ();
 		gameBGM.AllStop ();
 		gameBGM.GamePlay (false);
 		gameResult = 0;
@@ -96,7 +96,7 @@ public class Game : MonoBehaviour {
 			short gateHp = BitConverter.ToInt16 (recvData, 4);
 			if (gameResult == 1) {
 				Reset ();
-				gameUI.Victory ();
+				gameUIPanel.Victory ();
 				gameBGM.Victory ();
 			} else {
 				int offset = 6;

@@ -13,10 +13,11 @@ public class Ghost : MonoBehaviour {
 	private BulletPool submachineBulletPool;
 	private BulletPool sniperBulletPool;
 	private Vector3 offsetY = new Vector3(0, 50, 0);
+	private float bulletProbability = 0.125f;
 
 	void Awake() {
 		AudioSource hurtSound = GetComponent<AudioSource> ();
-		Skull skull = GameObject.Find ("Skull").GetComponent<Skull> ();
+		FadeImage skull = GameObject.Find ("Skull").GetComponent<FadeImage> ();
 		monster = new MonsterHP (hurtSound, hurtSound, skull);
 	}
 
@@ -68,10 +69,12 @@ public class Ghost : MonoBehaviour {
 		if (action == 4) {
 			if (!isDying) { // die by hit at the moment
 				float rm = UnityEngine.Random.value;
-				if (rm < 0.1f) {
-					submachineBulletPool.Occur (transform.position.y < -40.0f ? transform.position + offsetY : transform.position);
-				} else if (rm < 0.2f) {
-					sniperBulletPool.Occur (transform.position.y < -40.0f ? transform.position + offsetY : transform.position);
+				if (rm < bulletProbability + bulletProbability) {
+					if (rm < bulletProbability) {
+						submachineBulletPool.Occur (transform.position.y < -40.0f ? transform.position + offsetY : transform.position);
+					} else {
+						sniperBulletPool.Occur (transform.position.y < -40.0f ? transform.position + offsetY : transform.position);
+					}
 				}
 			}
 			isDying = true;

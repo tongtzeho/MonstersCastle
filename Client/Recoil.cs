@@ -5,7 +5,7 @@ using UnityEngine;
 public class Recoil {
 
 	private float recoil = 0.0f;
-	public const float maxRecoil = 10.0f;
+	public const float maxRecoil = 9.0f;
 	public const float recoverSpeed = 20.0f;
 
 	public void Reset() {

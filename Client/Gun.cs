@@ -24,7 +24,8 @@ public class Gun : MonoBehaviour {
 	public float diffuse; // assigned in editor
 	private RaycastHit hitResult;
 	private Hit hitSystem;
-	public float attack; // assigned in editor
+	public short attack; // assigned in editor
+	public short criticalAttack; // assigned in editor
 	public float recoil; // assigned in editor
 
 	void Start () {
@@ -100,7 +101,7 @@ public class Gun : MonoBehaviour {
 			float randomY = UnityEngine.Random.value * 2.0f * diffuse - diffuse;
 			fireRay = parent.ScreenPointToRay (new Vector3 (Screen.width / 2.0f + randomX, Screen.height / 2.0f + randomY, 0));
 			if (Physics.Raycast (fireRay, out hitResult)) {
-				hitSystem.HitCollider ((short)attack, hitResult.collider);
+				hitSystem.HitCollider (attack, criticalAttack, hitResult.collider);
 			}
 			recoilResult = recoil;
 			return true;

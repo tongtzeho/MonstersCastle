@@ -5,14 +5,24 @@ using UnityEngine;
 public class Hit : MonoBehaviour {
 
 	private Hashtable colliderTable = new Hashtable();
+	private HashSet<Collider> headSet = new HashSet<Collider> ();
+
+	// assigned in editor
+	public CriticalHit criticalHit;
+	public FadeImage hitImage;
+	public FadeImage criticalHitImage;
 
 	void Start () {
+		colliderTable.Clear ();
+		headSet.Clear ();
 		GameObject bruteObject = GameObject.Find ("Brute");
 		MonsterHP brute = bruteObject.GetComponent<Brute> ().monster;
 		Collider[] bruteCollider = bruteObject.GetComponentsInChildren<Collider> ();
 		for (int i = 0; i < bruteCollider.Length; ++i) {
 			colliderTable.Add (bruteCollider [i], brute);
 		}
+		Collider bruteHead = bruteObject.GetComponentInChildren<SphereCollider> ();
+		headSet.Add (bruteHead);
 		Transform ghostPool = GameObject.Find ("GhostPool").transform;
 		int ghostId = 0;
 		while (true) {
@@ -27,13 +37,22 @@ public class Hit : MonoBehaviour {
 				for (int i = 0; i < ghostCollider.Length; ++i) {
 					colliderTable.Add (ghostCollider [i], monster);
 				}
+				Collider ghostHead = ghost.gameObject.GetComponent<SphereCollider> ();
+				headSet.Add (ghostHead);
 			}
 		}
 	}
 
-	public void HitCollider(short atk, Collider collider) {
+	public void HitCollider(short damage, short criticalDamage, Collider collider) {
 		if (colliderTable.Contains (collider)) {
-			((MonsterHP)colliderTable [collider]).Hit (atk);
+			if (headSet.Contains(collider)) {
+				((MonsterHP)colliderTable [collider]).Hit (criticalDamage);
+				criticalHit.Play ();
+				criticalHitImage.Activate ();
+			} else {
+				((MonsterHP)colliderTable [collider]).Hit (damage);
+				hitImage.Activate ();
+			}
 		}
 	}
 }

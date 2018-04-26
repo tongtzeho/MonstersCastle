@@ -4,9 +4,10 @@ using UnityEngine;
 
 public class Ball : MonoBehaviour {
 
-	Vector3 resetPos = new Vector3 (0, -10, 0);
-	Vector3 velocity = new Vector3();
-	bool isAlive = false;
+	private Vector3 resetPos = new Vector3 (0, -10, 0);
+	private Vector3 velocity = new Vector3();
+	private bool isAlive = false;
+	private float rotation = 150.0f;
 
 	void Start() {
 		transform.position = resetPos;
@@ -30,6 +31,7 @@ public class Ball : MonoBehaviour {
 	void Update () {
 		if (isAlive) {
 			transform.position += velocity * Time.deltaTime;
+			transform.Rotate (0, rotation * Time.deltaTime, 0);
 		}
 	}
 }

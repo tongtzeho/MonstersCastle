@@ -7,11 +7,13 @@ public class GhostAnimator : MonoBehaviour {
 	private Animation gunAnimation;
 	private ParticleSystem dieParticle;
 	private ParticleSystem bombParticle;
+	private AudioSource attackSound;
 
 	void Start () {
 		gunAnimation = GetComponent<Animation> ();
 		dieParticle = transform.Find ("DieParticle").gameObject.GetComponent<ParticleSystem> ();
 		bombParticle = transform.Find ("BombParticle").gameObject.GetComponent<ParticleSystem> ();
+		attackSound = transform.Find ("Bip001").gameObject.GetComponent<AudioSource> ();
 	}
 
 	public void SetState(short action) {
@@ -28,18 +30,21 @@ public class GhostAnimator : MonoBehaviour {
 			break;
 		case 3:
 			gunAnimation.Play ("attack_short_001");
+			attackSound.Play ();
 			break;
 		case 4:
 			gunAnimation.Play ("idle_normal");
 			if (!dieParticle.isPlaying) {
 				dieParticle.Play ();
 			}
+			attackSound.Stop ();
 			break;
 		case 5:
 			gunAnimation.Play ("idle_normal");
 			if (!bombParticle.isPlaying) {
 				bombParticle.Play ();
 			}
+			attackSound.Stop ();
 			break;
 		}
 	}
