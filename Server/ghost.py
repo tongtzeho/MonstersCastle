@@ -5,7 +5,7 @@ import struct, time, random, math
 import ball
 
 class ghost:
-	def __init__(self, id, bornPoint, height): # [0, 1, 2] for [Left, Mid, Right]
+	def __init__(self, id, height): # [0, 1, 2] for [Left, Mid, Right]
 		self.debug = False
 		self.height = height
 		self.id = id
@@ -15,7 +15,8 @@ class ghost:
 		self.rotationY = 0.0
 		self.action = 2 # 1 for walk, 2 for idle, 3 for attack, 4 for die, 5 for bomb
 		self.scalarVelocity = 2.0
-		self.setWay(bornPoint)
+		self.attackVelocityRate = 0.5
+		self.setWay()
 		self.phase = -1
 		self.bornCurrTime = 0
 		self.bornTotalTime = 1
@@ -25,44 +26,30 @@ class ghost:
 		self.attackTotalTime = 1.5
 		self.attackId = 0
 		self.attackMax = 15
-		self.generateAttackCD()
+		self.generateAttackCD(True)
 		self.dieCurrTime = 0
 		self.dieTotalTime = 1
 		self.bombCurrTime = 0
 		self.bombTotalTime = 1
-		print "Ghost(%d) Born" % self.id
+		print "Ghost(%d) Born At #%d" % (self.id, self.checkPointId)
 	
-	def generateAttackCD(self):
-		self.attackCD = random.random()*3+2
-	
-	def setWay(self, bornPoint):
-		if bornPoint == 0:
-			if random.random() < 0.5:
-				self.checkPoint = [
-					[-19.5, 46], [-21.2, 43], [-21.2, 17], [-17.4, 13.2], [-12.5, 13.2], [-8.5, 6.8], [-2.5, 1.8]
-				]
-			else:
-				self.checkPoint = [
-					[-19.5, 46], [-17.8, 43], [-17.8, 16], [-17.1, 14.7], [-9, 14.7], [-1.5, 1.8]
-				]
-		elif bornPoint == 1:
-			if random.random() < 0.5:
-				self.checkPoint = [
-					[-6, 49], [-5, 16], [-1, 1.8]
-				]
-			else:
-				self.checkPoint = [
-					[-6, 49], [-2, 43], [-0.5, 1.8]
-				]
+	def generateAttackCD(self, isBorning):
+		if isBorning:
+			self.attackCD = random.random()+1.5
 		else:
-			if random.random() < 0.5:
-				self.checkPoint = [
-					[14.6, 54], [16, 40], [15, 17], [9, 7], [2.5, 1.8]
-				]
-			else:
-				self.checkPoint = [
-					[14.6, 54], [13.5, 46], [9, 34], [7, 18], [1.7, 1.8]
-				]
+			self.attackCD = random.random()*5+3
+	
+	def setWay(self):
+		self.checkPointId = int(random.random()*6)
+		checkPoints = [
+			[[-19.5, 46], [-21.2, 43], [-21.2, 17], [-17.4, 13.2], [-12.5, 13.2], [-8.5, 6.8], [-2.5, 1.8]], # Left 1
+			[[-19.5, 46], [-17.8, 43], [-17.8, 16], [-17.1, 14.7], [-9, 14.7], [-1.5, 1.8]], # Left 2
+			[[-6, 49], [-5, 16], [-1, 1.8]], # Mid 1
+			[[-6, 49], [-2, 43], [-0.5, 1.8]], # Mid 2
+			[[14.6, 54], [16, 40], [15, 17], [9, 7], [2.5, 1.8]], # Right 1
+			[[14.6, 54], [13.5, 46], [9, 34], [7, 18], [1.7, 1.8]] # Right 2
+		]
+		self.checkPoint = checkPoints[self.checkPointId]
 	
 	def getRotationY(self, x0, z0, x1, z1): # from [x0, z0] to [x1, z1]
 		dx = x1 - x0
@@ -83,6 +70,13 @@ class ghost:
 		vLen = 1.0/math.sqrt(v[0]*v[0] + v[1]*v[1])
 		return [v[0]*vLen*self.scalarVelocity, v[1]*vLen*self.scalarVelocity]
 	
+	def getRotationYByCurrentPhase(self):
+		if self.phase < len(self.checkPoint) - 1:
+			self.rotationY = self.getRotationY(self.checkPoint[self.phase][0], self.checkPoint[self.phase][1], self.checkPoint[self.phase+1][0], self.checkPoint[self.phase+1][1])
+		else:
+			self.rotationY = 180.0
+		return self.rotationY
+	
 	def attack(self, dt, character):
 		ret = None
 		if character.isAlive:
@@ -91,9 +85,9 @@ class ghost:
 			aim = [-0.06, 4.67, 0.711]
 		if self.attackCurrTime > self.attackTotalTime: # an attack end
 			self.action = 2
-			self.rotationY = self.getRotationY(self.checkPoint[self.phase][0], self.checkPoint[self.phase][1], self.checkPoint[self.phase+1][0], self.checkPoint[self.phase+1][1])
+			self.rotationY = self.getRotationYByCurrentPhase()
 			self.attackCurrTime = 0
-			self.generateAttackCD()
+			self.generateAttackCD(False)
 		else:
 			if self.attackCurrTime > self.attackAimTime:
 				if self.attackCurrTime - dt <= self.attackAimTime: # push a ball out
@@ -167,27 +161,29 @@ class ghost:
 					self.phase = 0
 					self.velocity = self.getVelocity()
 				return [0, 0, 0, None]
-			else:
+			else: # walking and attacking while walking
 				newBall = None
-				if self.attackCurrTime == 0: # attack, or walk from checkPoint[phase] to checkPoint[phase+1]
-					if self.attackId < self.attackMax and self.attackCD <= 0:
+				oldDistSqr = (self.position[0]-self.checkPoint[self.phase+1][0])*(self.position[0]-self.checkPoint[self.phase+1][0]) + (self.position[2]-self.checkPoint[self.phase+1][1])*(self.position[2]-self.checkPoint[self.phase+1][1])
+				if self.attackCurrTime == 0: # not attacking
+					self.position[0] += self.velocity[0]*dt
+					self.position[2] += self.velocity[1]*dt
+				else: # is attacking, slow
+					self.position[0] += self.velocity[0]*self.attackVelocityRate*dt
+					self.position[2] += self.velocity[1]*self.attackVelocityRate*dt
+				self.position[1] = self.height.getHeight(self.position[0], self.position[2])
+				newDistSqr = (self.position[0]-self.checkPoint[self.phase+1][0])*(self.position[0]-self.checkPoint[self.phase+1][0]) + (self.position[2]-self.checkPoint[self.phase+1][1])*(self.position[2]-self.checkPoint[self.phase+1][1])
+				if oldDistSqr < newDistSqr: # already arrived at checkPoint[phase+1]
+					self.phase += 1
+					if self.phase < len(self.checkPoint) - 1:
+						self.velocity = self.getVelocity()
+				if self.attackCurrTime == 0: # not attacking
+					if self.attackId < self.attackMax and self.attackCD <= 0: # begin aiming and begin attack animation
 						newBall = self.attack(dt, character)
 					else:
-						oldDistSqr = (self.position[0]-self.checkPoint[self.phase+1][0])*(self.position[0]-self.checkPoint[self.phase+1][0]) + (self.position[2]-self.checkPoint[self.phase+1][1])*(self.position[2]-self.checkPoint[self.phase+1][1])
-						self.position[0] += self.velocity[0]*dt
-						self.position[2] += self.velocity[1]*dt
-						self.position[1] = self.height.getHeight(self.position[0], self.position[2])
-						newDistSqr = (self.position[0]-self.checkPoint[self.phase+1][0])*(self.position[0]-self.checkPoint[self.phase+1][0]) + (self.position[2]-self.checkPoint[self.phase+1][1])*(self.position[2]-self.checkPoint[self.phase+1][1])
-						self.action = 1
 						self.attackCD -= dt
-						if oldDistSqr < newDistSqr: # already arrived at checkPoint[phase+1]
-							self.phase += 1
-							if self.phase < len(self.checkPoint) - 1:
-								self.velocity = self.getVelocity()
-								self.rotationY = self.getRotationY(self.checkPoint[self.phase][0], self.checkPoint[self.phase][1], self.checkPoint[self.phase+1][0], self.checkPoint[self.phase+1][1])
-							else:
-								self.rotationY = 180.0
-				else:
+						self.rotationY = self.getRotationYByCurrentPhase()
+						self.action = 1
+				else: # during attack animation
 					newBall = self.attack(dt, character)
 				return [0, 0, 0, newBall]
 		else: # die

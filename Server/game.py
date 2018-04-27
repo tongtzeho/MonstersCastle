@@ -103,9 +103,8 @@ class game(threading.Thread): # run as a game monitor client
 		return damage
 	
 	def updateGhosts(self, deltaTime):
-		if self.gameTime >= 2*self.ghostId and self.gameTime-deltaTime < 2*self.ghostId and self.ghostId <= self.ghostMax and self.level <= 5:
-			bornPoint = int(self.gameTime/2)%3
-			self.ghosts[self.ghostId] = ghost.ghost(self.ghostId, bornPoint, self.height)
+		if self.gameTime >= 1.8*self.ghostId and self.gameTime-deltaTime < 1.8*self.ghostId and self.ghostId <= self.ghostMax and self.level <= 5:
+			self.ghosts[self.ghostId] = ghost.ghost(self.ghostId, self.height)
 			self.ghostId += 1
 		damage = [0, 0]
 		delList = []
