@@ -4,9 +4,9 @@ using UnityEngine;
 
 public class BallPool : MonoBehaviour {
 
-	private Hashtable activeBall = new Hashtable (); // key: BallId in server, value: BallId in pool (0 to 59)
-	private Ball[] ballPool = new Ball[60];
-	private Queue freeIndex = new Queue (); // BallId in pool (0 to 59)
+	private Hashtable activeBall = new Hashtable (); // key: BallId in server, value: BallId in pool (0 to 39)
+	private Ball[] ballPool = new Ball[40];
+	private Queue freeIndex = new Queue (); // BallId in pool (0 to 39)
 
 	void Awake () {
 		for (int i = 0; i < ballPool.Length; ++i) {

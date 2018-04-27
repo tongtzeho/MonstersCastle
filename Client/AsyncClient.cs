@@ -24,11 +24,11 @@ public class AsyncClient : MonoBehaviour {
 		clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 		clientSocket.BeginConnect(ip, port, asyncResult => {
 			clientSocket.EndConnect(asyncResult);
-			Receive();
+			AsyncReceive();
 		}, null);
 	}
 
-	private void EncodeAndSend(byte[] sendData) {
+	private void AsyncSend(byte[] sendData) {
 		byte[] sendBuf = new byte[4 + sendData.Length];
 		sendBuf [0] = 0xed; // encode, same as msg.py
 		sendBuf [1] = 0xcb;
@@ -43,7 +43,7 @@ public class AsyncClient : MonoBehaviour {
 	// only called by Login.cs
 	public void SendString(string sendString) {
 		byte[] sendData = Encoding.ASCII.GetBytes (sendString);
-		EncodeAndSend (sendData);
+		AsyncSend (sendData);
 	}
 
 	// only called by Game.cs
@@ -51,13 +51,13 @@ public class AsyncClient : MonoBehaviour {
 		List<byte> result = new List<byte> ();
 		result.AddRange (BitConverter.GetBytes (gameResult));
 		result.AddRange (BitConverter.GetBytes (command));
-		EncodeAndSend (result.ToArray ());
+		AsyncSend (result.ToArray ());
 	}
 
 	void Update () {
 		if (game.IsStart () && game.IsInitialized () && !game.IsGameOver()) {
 			byte[] sendData = game.GetCurrentGameStatus ();
-			EncodeAndSend (sendData);
+			AsyncSend (sendData);
 		}
 	}
 
@@ -72,7 +72,7 @@ public class AsyncClient : MonoBehaviour {
 		}
 	}
 
-	private void Receive() {
+	private void AsyncReceive() {
 		clientSocket.BeginReceive (recvData, 0, recvData.Length, SocketFlags.None, asyncResult => {
 			int recvLen = clientSocket.EndReceive(asyncResult);
 
@@ -121,7 +121,7 @@ public class AsyncClient : MonoBehaviour {
 				}
 			}
 
-			Receive();
+			AsyncReceive();
 		}, null);
 	}
 
