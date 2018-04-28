@@ -5,7 +5,7 @@ import socket, threading, random, struct, time
 import msg, character, brute, ghost, bullets
 
 class game(threading.Thread): # run as a game monitor client
-	def __init__(self, username, address, port, height):
+	def __init__(self, username, address, port, scene):
 		threading.Thread.__init__(self)
 		self.recog = random.randint(1, 100000000) # a number recognized the game monitor
 		self.isStop = False
@@ -14,13 +14,13 @@ class game(threading.Thread): # run as a game monitor client
 		self.conn.connect((address, port))
 		self.conn.setblocking(False)
 		self.username = username
-		self.height = height
+		self.scene = scene
 		self.initGame()
 		
 	def initGame(self):
 		self.gameLock.acquire()
 		self.character = character.character()
-		self.brute = brute.brute(self.height)
+		self.brute = brute.brute(self.scene)
 		self.ghosts = {}
 		self.ghostId = 1
 		self.ghostMax = 2000
@@ -69,7 +69,7 @@ class game(threading.Thread): # run as a game monitor client
 	def update(self, deltaTime):
 		self.gameLock.acquire()
 		if self.gameResult == 0:
-			try:
+			#try:
 				self.gameTime += deltaTime
 				damageByBalls = self.updateBalls(deltaTime)
 				damageByBrute = self.brute.update(deltaTime, self.character)
@@ -86,8 +86,8 @@ class game(threading.Thread): # run as a game monitor client
 					self.character.hp -= damage
 					print "Character Hurt {%d}" % damage
 				self.character.update(deltaTime)
-			except:
-				print ("game.py update error")
+			#except:
+			#	print ("game.py update error")
 		self.gameLock.release()
 	
 	def updateBalls(self, deltaTime):
@@ -103,8 +103,8 @@ class game(threading.Thread): # run as a game monitor client
 		return damage
 	
 	def updateGhosts(self, deltaTime):
-		if self.gameTime >= 1.8*self.ghostId and self.gameTime-deltaTime < 1.8*self.ghostId and self.ghostId <= self.ghostMax and self.level <= 5:
-			self.ghosts[self.ghostId] = ghost.ghost(self.ghostId, self.height)
+		if self.gameTime >= 2*self.ghostId and self.gameTime-deltaTime < 2*self.ghostId and self.ghostId <= self.ghostMax and self.level <= 5:
+			self.ghosts[self.ghostId] = ghost.ghost(self.ghostId, self.scene)
 			self.ghostId += 1
 		damage = [0, 0]
 		delList = []

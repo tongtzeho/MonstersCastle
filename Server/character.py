@@ -14,6 +14,7 @@ class character:
 		self.prop = [0, 0, 0, 0] # 0 for nothing, 1 for +hp, 2 for barrier, 3 for +atk
 		self.buffTimeLeft = [0.0, 0.0, 0.0]
 		self.rebornTime = 6.0
+		self.radius = 0.26
 		
 	def reborn(self):
 		self.isAlive = 1
@@ -26,6 +27,15 @@ class character:
 	def resetPosition(self):
 		self.position = [0.0, 3.0, 10.0]
 		self.rotationY = 0.0
+		
+	def getBodyCenter(self):
+		return [self.position[0], self.position[1]+1.34, self.position[2]]
+	
+	def getBodyBottom(self):
+		return [self.position[0], self.position[1]+self.radius, self.position[2]]
+	
+	def getBodyTop(self):
+		return [self.position[0], self.position[1]+1.57, self.position[2]]
 		
 	def die(self):
 		self.isAlive = 0

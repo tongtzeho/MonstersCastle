@@ -4,9 +4,9 @@
 import struct, time, math
 
 class brute:
-	def __init__(self, height):
+	def __init__(self, scene):
 		self.debug = False
-		self.height = height
+		self.scene = scene
 		self.level = 0
 		self.maxHp = [300, 600, 1000, 1500, 2000]
 		self.atk = [100, 150, 200, 250, 300]
@@ -32,7 +32,7 @@ class brute:
 		self.hp = self.maxHp[self.level]
 		self.position[0] = self.rebornPosition[0]
 		self.position[2] = self.rebornPosition[1]
-		self.position[1] = self.height.getHeight(self.position[0], self.position[2])
+		self.position[1] = self.scene.getHeight(self.position[0], self.position[2])
 		self.rotationY = self.rebornRotationY
 		self.action = 0
 		self.lifeTime = 0
@@ -59,7 +59,7 @@ class brute:
 					self.action = 1
 					self.position[0] += self.velocity[0]*dt
 					self.position[2] += self.velocity[1]*dt
-					self.position[1] = self.height.getHeight(self.position[0], self.position[2])
+					self.position[1] = self.scene.getHeight(self.position[0], self.position[2])
 				else:
 					self.attackCD -= dt
 					if self.attackCD <= 0:

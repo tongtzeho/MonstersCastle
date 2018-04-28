@@ -5,9 +5,9 @@ import struct, time, random, math
 import ball
 
 class ghost:
-	def __init__(self, id, height): # [0, 1, 2] for [Left, Mid, Right]
+	def __init__(self, id, scene): # [0, 1, 2] for [Left, Mid, Right]
 		self.debug = False
-		self.height = height
+		self.scene = scene
 		self.id = id
 		self.hp = 150
 		self.maxHp = 150
@@ -80,9 +80,9 @@ class ghost:
 	def attack(self, dt, character):
 		ret = None
 		if character.isAlive:
-			aim = character.position
+			aim = character.getBodyCenter()
 		else:
-			aim = [-0.06, 4.67, 0.711]
+			aim = [-0.06, 4.67, 0.711] # gate
 		if self.attackCurrTime > self.attackTotalTime: # an attack end
 			self.action = 2
 			self.rotationY = self.getRotationYByCurrentPhase()
@@ -101,7 +101,7 @@ class ghost:
 						2.1+self.position[1],
 						-0.62*s+0.35*c+self.position[2]
 					]
-					ret = ball.ball(ballId, startPoint, aim)
+					ret = ball.ball(ballId, startPoint, aim, self.scene)
 					print "Ghost(%d) Attack<%d>" % (self.id, ballId)
 					self.attackId += 1
 				self.action = 2 # wait for animation end
@@ -132,7 +132,7 @@ class ghost:
 			self.hp = 0
 			self.position[0] = self.checkPoint[-1][0]
 			self.position[2] = self.checkPoint[-1][1]
-			self.position[1] = self.height.getHeight(self.position[0], self.position[2])
+			self.position[1] = self.scene.getHeight(self.position[0], self.position[2])
 			self.rotationY = 180.0
 			self.action = 5
 			damageToCharacter = 0
@@ -149,15 +149,15 @@ class ghost:
 				if self.bornCurrTime == 0:
 					self.position[0] = self.checkPoint[0][0]
 					self.position[2] = self.checkPoint[0][1]
-					self.position[1] = self.height.getHeight(self.position[0], self.position[2])+(self.bornCurrTime - self.bornTotalTime)*self.bornVelocity
+					self.position[1] = self.scene.getHeight(self.position[0], self.position[2])+(self.bornCurrTime - self.bornTotalTime)*self.bornVelocity
 					self.rotationY = self.getRotationY(self.checkPoint[0][0], self.checkPoint[0][1], self.checkPoint[1][0], self.checkPoint[1][1])
 					self.action = 2
 					self.bornCurrTime += dt
 				elif self.bornCurrTime < self.bornTotalTime:
-					self.position[1] = self.height.getHeight(self.position[0], self.position[2])+(self.bornCurrTime - self.bornTotalTime)*self.bornVelocity
+					self.position[1] = self.scene.getHeight(self.position[0], self.position[2])+(self.bornCurrTime - self.bornTotalTime)*self.bornVelocity
 					self.bornCurrTime += dt
 				else:
-					self.position[1] = self.height.getHeight(self.position[0], self.position[2])
+					self.position[1] = self.scene.getHeight(self.position[0], self.position[2])
 					self.phase = 0
 					self.velocity = self.getVelocity()
 				return [0, 0, 0, None]
@@ -170,7 +170,7 @@ class ghost:
 				else: # is attacking, slow
 					self.position[0] += self.velocity[0]*self.attackVelocityRate*dt
 					self.position[2] += self.velocity[1]*self.attackVelocityRate*dt
-				self.position[1] = self.height.getHeight(self.position[0], self.position[2])
+				self.position[1] = self.scene.getHeight(self.position[0], self.position[2])
 				newDistSqr = (self.position[0]-self.checkPoint[self.phase+1][0])*(self.position[0]-self.checkPoint[self.phase+1][0]) + (self.position[2]-self.checkPoint[self.phase+1][1])*(self.position[2]-self.checkPoint[self.phase+1][1])
 				if oldDistSqr < newDistSqr: # already arrived at checkPoint[phase+1]
 					self.phase += 1

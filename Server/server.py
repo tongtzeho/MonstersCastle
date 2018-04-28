@@ -2,7 +2,7 @@
 # Python 2.7.14
 
 import socket, select, os, time, json, struct
-import game, msg, height
+import game, msg, scene
 
 CONNECTION_LIST = [] # Read sockets
 CONNECTION_USERS = {} # Socket-Username (if not logined, username is None)
@@ -34,7 +34,7 @@ def handleGameMonitorData(sock, data):
 		sendMsgToSock(USERS_CONNECTION[username], data[28:])
 	
 def createNewGame(username):
-	PLAYER_GAME[username] = game.game(username, ADDRESS, PORT, HEIGHT)
+	PLAYER_GAME[username] = game.game(username, ADDRESS, PORT, SCENE)
 	PLAYER_GAME[username].start() # start a client thread as game monitor
 	print ("'%s' create new game" % username)
 
@@ -121,7 +121,7 @@ def logout(username):
 		USERS_CONNECTION.pop(username)
 	
 if __name__ == "__main__":
-	HEIGHT = height.height("height.bin")
+	SCENE = scene.scene("height.bin", "triangle.bin", "octree.dll")
 	USER_DATABASE = loadUserDatabase("user.json")
 	gameSocketServer = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	gameSocketServer.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
