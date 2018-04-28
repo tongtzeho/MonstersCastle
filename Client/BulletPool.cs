@@ -17,7 +17,7 @@ public class BulletPool : MonoBehaviour {
 	private Queue<int> freeBullets = new Queue<int>();
 	private float enqueueThresholdY = -40;
 	private Vector3 resetPosition = new Vector3(0, -50, 0);
-	private int poolSize = 10;
+	private int poolSize = 8;
 	private int queryId = 0;
 	private float distSqrThreshold = 0.9f*0.9f;
 
