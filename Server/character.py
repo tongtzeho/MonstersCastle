@@ -59,9 +59,9 @@ class character:
 			
 	def handle(self, data):
 		if self.isAlive:
-			self.position[0], self.position[1], self.position[2], self.rotationY = struct.unpack("=4f", data[10:26])
-		self.sniperBulletNum, self.sniperBulletOwn, self.submachineBulletNum, self.submachineBulletOwn = struct.unpack("=4h", data[26:34])
-		self.prop[0], self.prop[1], self.prop[2], self.prop[3] = struct.unpack("=4h", data[34:42])
+			self.position[0], self.position[1], self.position[2], self.rotationY = struct.unpack("=4f", data[:16])
+		self.sniperBulletNum, self.sniperBulletOwn, self.submachineBulletNum, self.submachineBulletOwn = struct.unpack("=4h", data[16:24])
+		self.prop[0], self.prop[1], self.prop[2], self.prop[3] = struct.unpack("=4h", data[24:32])
 	
 	def serialize(self):
 		return struct.pack("=hf2h4f8h3f", self.isAlive, self.rebornTimeLeft, self.hp, self.maxHp, self.position[0], self.position[1], self.position[2], self.rotationY, self.sniperBulletNum, self.sniperBulletOwn, self.submachineBulletNum, self.submachineBulletOwn, self.prop[0], self.prop[1], self.prop[2], self.prop[3], self.buffTimeLeft[0], self.buffTimeLeft[1], self.buffTimeLeft[2])

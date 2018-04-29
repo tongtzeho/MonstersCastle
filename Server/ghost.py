@@ -37,7 +37,7 @@ class ghost:
 		if isBorning:
 			self.attackCD = random.random()+1.5
 		else:
-			self.attackCD = random.random()*5+3
+			self.attackCD = random.random()*4+4
 	
 	def setWay(self):
 		self.checkPointId = int(random.random()*6)

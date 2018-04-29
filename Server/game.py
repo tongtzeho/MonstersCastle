@@ -25,11 +25,12 @@ class game(threading.Thread): # run as a game monitor client
 		self.ghostId = 1
 		self.ghostMax = 2000
 		self.balls = {}
-		self.submachineBullets = bullets.bullets(10)
-		self.sniperBullets = bullets.bullets(10)
+		self.submachineBullets = bullets.bullets(8)
+		self.sniperBullets = bullets.bullets(8)
 		self.gameTime = 0
 		self.gameResult = 0 # 0 for playing, 1 for win, 2 for lose
 		self.level = 0
+		self.maxLevel = 5
 		self.gateHp = 0
 		self.gameLock.release()
 	
@@ -69,16 +70,16 @@ class game(threading.Thread): # run as a game monitor client
 	def update(self, deltaTime):
 		self.gameLock.acquire()
 		if self.gameResult == 0:
-			#try:
+			try:
 				self.gameTime += deltaTime
 				damageByBalls = self.updateBalls(deltaTime)
 				damageByBrute = self.brute.update(deltaTime, self.character)
-				if (self.level == 0 and self.gameTime >= 5) or (self.level >= 1 and self.level <= 4 and self.isBruteDead(10, deltaTime)):
+				if (self.level == 0 and self.gameTime >= 5) or (self.level >= 1 and self.level <= self.maxLevel - 1 and self.isBruteDead(10, deltaTime)):
 					self.brute.reborn()
 					self.level += 1
-				elif self.level == 5 and self.brute.isAlive == 0:
-					self.level = 6 # ghost will not born
-				if self.level == 6 and len(self.ghosts) == 0:
+				elif self.level == self.maxLevel and self.brute.isAlive == 0:
+					self.level = self.maxLevel+1 # ghost will not born
+				if self.level == self.maxLevel+1 and len(self.ghosts) == 0:
 					self.gameResult = 1
 				damageByGhosts = self.updateGhosts(deltaTime)
 				damage = int(damageByBalls[0]+damageByBrute[0]+damageByGhosts[0])
@@ -86,8 +87,8 @@ class game(threading.Thread): # run as a game monitor client
 					self.character.hp -= damage
 					print "Character Hurt {%d}" % damage
 				self.character.update(deltaTime)
-			#except:
-			#	print ("game.py update error")
+			except:
+				print ("game.py update error")
 		self.gameLock.release()
 	
 	def updateBalls(self, deltaTime):
@@ -103,7 +104,7 @@ class game(threading.Thread): # run as a game monitor client
 		return damage
 	
 	def updateGhosts(self, deltaTime):
-		if self.gameTime >= 2*self.ghostId and self.gameTime-deltaTime < 2*self.ghostId and self.ghostId <= self.ghostMax and self.level <= 5:
+		if self.gameTime >= 2.3*self.ghostId and self.gameTime-deltaTime < 2.3*self.ghostId and self.ghostId <= self.ghostMax and self.level <= self.maxLevel:
 			self.ghosts[self.ghostId] = ghost.ghost(self.ghostId, self.scene)
 			self.ghostId += 1
 		damage = [0, 0]
