@@ -33,17 +33,9 @@ public class Ghost : MonoBehaviour {
 		}
 	}
 
-	public List<byte> Serialize() {
-		List<byte> result = new List<byte> ();
-		result.AddRange (BitConverter.GetBytes (serverId));
-		result.AddRange (BitConverter.GetBytes (monster.hp));
-		result.AddRange (BitConverter.GetBytes (monster.maxHp));
-		result.AddRange (BitConverter.GetBytes (transform.position.x));
-		result.AddRange (BitConverter.GetBytes (transform.position.y));
-		result.AddRange (BitConverter.GetBytes (transform.position.z));
-		result.AddRange (BitConverter.GetBytes (transform.eulerAngles.y));
-		result.AddRange (BitConverter.GetBytes (action));
-		return result;
+	public void Serialize(byte[] serializedData, ref int offset) {
+		Serializer.ToBytes (serverId, serializedData, ref offset);
+		Serializer.ToBytes (monster.hp, serializedData, ref offset);
 	}
 
 	public void Enable(short sid, short hp) {

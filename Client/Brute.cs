@@ -30,18 +30,13 @@ public class Brute : MonoBehaviour {
 		attackSound = attackPoint.GetComponent<AudioSource> ();
 	}
 
-	public byte[] Serialize() {
-		List<byte> result = new List<byte> ();
-		result.AddRange (BitConverter.GetBytes (isAlive));
-		result.AddRange (BitConverter.GetBytes (level));
-		result.AddRange (BitConverter.GetBytes (monster.hp));
-		result.AddRange (BitConverter.GetBytes (monster.maxHp));
-		result.AddRange (BitConverter.GetBytes (transform.position.x));
-		result.AddRange (BitConverter.GetBytes (transform.position.y));
-		result.AddRange (BitConverter.GetBytes (transform.position.z));
-		result.AddRange (BitConverter.GetBytes (transform.eulerAngles.y));
-		result.AddRange (BitConverter.GetBytes (action));
-		return result.ToArray ();
+	public void Serialize(byte[] serializedData, ref int offset) {
+		int begin = offset;
+		Serializer.ToBytes ((short)0, serializedData, ref offset); // brute data length
+		Serializer.ToBytes (isAlive, serializedData, ref offset);
+		Serializer.ToBytes (level, serializedData, ref offset);
+		Serializer.ToBytes (monster.hp, serializedData, ref offset);
+		Serializer.ToBytes ((short)(offset - begin - 2), serializedData, ref begin);
 	}
 
 	public void UpdateFromServer (bool gameInitializing, byte[] recvData, int beginIndex, int length) {

@@ -1,12 +1,16 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class BallPool : MonoBehaviour {
 
-	private Hashtable activeBall = new Hashtable (); // key: BallId in server, value: BallId in pool (0 to 31)
+	private Dictionary<int, short> activeBall = new Dictionary<int, short> (); // key: BallId in server, value: BallId in pool (0 to 31)
 	private Ball[] ballPool = new Ball[32];
 	private Queue freeIndex = new Queue (); // BallId in pool (0 to 31)
+
+	private int[] recycleList = new int[64];
+	private int numRecycles = 0;
 
 	void Awake () {
 		for (int i = 0; i < ballPool.Length; ++i) {
@@ -23,33 +27,33 @@ public class BallPool : MonoBehaviour {
 	}
 
 	public bool Contains(int serverId) {
-		return activeBall.Contains (serverId);
+		return activeBall.ContainsKey (serverId);
 	}
 
-	public Ball Create(int serverId, Vector3 position, Vector3 velocity) {
+	public Ball Create(int serverId, byte[] recvData, int beginIndex) {
 		if (freeIndex.Count == 0) {
 			return null;
 		} else {
 			int index = (int)freeIndex.Dequeue ();
-			activeBall.Add (serverId, index);
+			activeBall.Add (serverId, (short)index);
+			Vector3 position = new Vector3 (BitConverter.ToSingle (recvData, beginIndex), BitConverter.ToSingle (recvData, beginIndex + 4), BitConverter.ToSingle (recvData, beginIndex + 8));
+			Vector3 velocity = new Vector3 (BitConverter.ToSingle (recvData, beginIndex + 12), BitConverter.ToSingle (recvData, beginIndex + 16), BitConverter.ToSingle (recvData, beginIndex + 20));
 			ballPool [index].Enable (position, velocity);
 			return ballPool [index];
 		}
 	}
 
 	public void RecycleUnusedBalls(HashSet<int> usedBallServerId) {
-		IDictionaryEnumerator enumerator = activeBall.GetEnumerator();
-		List<int> recycleList = new List<int> ();
-		bool next = enumerator.MoveNext ();
-		while (next) {
-			if (!usedBallServerId.Contains ((int)enumerator.Key)) {
-				recycleList.Add ((int)enumerator.Key);
-				ballPool [(int)enumerator.Value].Disable ();
-				freeIndex.Enqueue((int)enumerator.Value);
+		numRecycles = 0;
+		foreach (KeyValuePair<int, short> kvp in activeBall) {
+			if (!usedBallServerId.Contains (kvp.Key)) {
+				recycleList [numRecycles] = kvp.Key;
+				++numRecycles;
+				ballPool [kvp.Value].Disable ();
+				freeIndex.Enqueue ((int)kvp.Value);
 			}
-			next = enumerator.MoveNext ();
 		}
-		for (int i = 0; i < recycleList.Count; ++i) {
+		for (int i = 0; i < numRecycles; ++i) {
 			activeBall.Remove (recycleList [i]);
 		}
 	}

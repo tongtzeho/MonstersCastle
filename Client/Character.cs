@@ -26,34 +26,24 @@ public class Character : MonoBehaviour {
 		characterSound = GetComponent<CharacterSound> ();
 	}
 
-	public byte[] Serialize() {
-		List<byte> result = new List<byte> ();
-		result.AddRange (BitConverter.GetBytes (isAlive));
-		result.AddRange (BitConverter.GetBytes (rebornTimeLeft));
-		result.AddRange (BitConverter.GetBytes (hp));
-		result.AddRange (BitConverter.GetBytes (maxHp));
+	public void Serialize(byte[] serializedData, ref int offset) {
+		int begin = offset;
+		Serializer.ToBytes ((short)0, serializedData, ref offset); // character data length
 		if (isAlive == 1) {
-			result.AddRange (BitConverter.GetBytes (characterController.transform.position.x));
-			result.AddRange (BitConverter.GetBytes (characterController.transform.position.y));
-			result.AddRange (BitConverter.GetBytes (characterController.transform.position.z));
-			result.AddRange (BitConverter.GetBytes (characterController.transform.eulerAngles.y));
+			Serializer.ToBytes (characterController.transform.position, serializedData, ref offset);
+			Serializer.ToBytes (characterController.transform.eulerAngles.y, serializedData, ref offset);
 		} else {
-			result.AddRange (BitConverter.GetBytes (defaultPosition.x));
-			result.AddRange (BitConverter.GetBytes (defaultPosition.y));
-			result.AddRange (BitConverter.GetBytes (defaultPosition.z));
-			result.AddRange (BitConverter.GetBytes (0.0f));
+			Serializer.ToBytes (defaultPosition, serializedData, ref offset);
+			Serializer.ToBytes (0.0f, serializedData, ref offset);
 		}
-		result.AddRange (BitConverter.GetBytes (sniper.GetBulletNum()));
-		result.AddRange (BitConverter.GetBytes (sniper.GetBulletOwn()));
-		result.AddRange (BitConverter.GetBytes (submachine.GetBulletNum()));
-		result.AddRange (BitConverter.GetBytes (submachine.GetBulletOwn()));
+		Serializer.ToBytes (sniper.GetBulletNum(), serializedData, ref offset);
+		Serializer.ToBytes (sniper.GetBulletOwn(), serializedData, ref offset);
+		Serializer.ToBytes (submachine.GetBulletNum(), serializedData, ref offset);
+		Serializer.ToBytes (submachine.GetBulletOwn(), serializedData, ref offset);
 		for (int i = 0; i < 4; ++i) {
-			result.AddRange (BitConverter.GetBytes (prop[i]));
+			Serializer.ToBytes (prop[i], serializedData, ref offset);
 		}
-		for (int i = 0; i < 3; ++i) {
-			result.AddRange (BitConverter.GetBytes (buffTimeLeft[i]));
-		}
-		return result.ToArray ();
+		Serializer.ToBytes ((short)(offset - begin - 2), serializedData, ref begin);
 	}
 
 	public void UpdateFromServer(bool gameInitializing, byte[] recvData, int beginIndex, int length) {
@@ -78,7 +68,11 @@ public class Character : MonoBehaviour {
 			characterSound.PlayRebornSound ();
 		}
 		isAlive = isCurrAlive;
+		float prevRebornTimeLeft = rebornTimeLeft;
 		rebornTimeLeft = BitConverter.ToSingle (recvData, beginIndex + 2);
+		if (prevRebornTimeLeft > 3.5f && rebornTimeLeft <= 3.5f) {
+			System.GC.Collect ();
+		}
 		short currHp = BitConverter.ToInt16 (recvData, beginIndex + 6);
 		if (currHp < hp && !gameInitializing) {
 			characterSound.PlayHurtSound ();

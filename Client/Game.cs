@@ -29,6 +29,8 @@ public class Game : MonoBehaviour {
 	private HashSet<int> usedGhostServerId = new HashSet<int>();
 	private HashSet<int> usedBallServerId = new HashSet<int>();
 
+	private byte[] serializedData = new byte[2048];
+
 	void Awake() {
 		BulletPool[] bulletPools = GameObject.Find ("BulletPool").GetComponents<BulletPool> ();
 		if (bulletPools [0].prefabName == "SniperBullet") {
@@ -38,6 +40,8 @@ public class Game : MonoBehaviour {
 			sniperBulletPool = bulletPools [1];
 			submachineBulletPool = bulletPools [0];
 		}
+		serializedData [0] = 0xed;
+		serializedData [1] = 0xcb;
 	}
 
 	public bool IsStart() {
@@ -86,6 +90,7 @@ public class Game : MonoBehaviour {
 		control.Disallow ();
 		gameState = GameState.Init;
 		recvQueue.Clear ();
+		System.GC.Collect ();
 	}
 
 	void Update () {
@@ -100,12 +105,15 @@ public class Game : MonoBehaviour {
 				gameBGM.Victory ();
 			} else {
 				int offset = 6;
+
 				short characterDataLen = BitConverter.ToInt16 (recvData, offset);
 				character.UpdateFromServer (gameState == GameState.Init, recvData, offset + 2, (int)characterDataLen);
 				offset += 2 + characterDataLen;
+
 				short bruteDataLen = BitConverter.ToInt16 (recvData, offset);
 				brute.UpdateFromServer (gameState == GameState.Init, recvData, offset + 2, (int)bruteDataLen);
 				offset += 2 + bruteDataLen;
+
 				short ghostDataLen = BitConverter.ToInt16 (recvData, offset);
 				short ghostDataByte = BitConverter.ToInt16 (recvData, offset + 2);
 				offset += 4;
@@ -121,16 +129,19 @@ public class Game : MonoBehaviour {
 					usedGhostServerId.Add (ghostServerId);
 				}
 				ghostPool.RecycleUnusedGhosts (usedGhostServerId);
+
 				short submachineBulletsNum = BitConverter.ToInt16 (recvData, offset);
 				if (gameState == GameState.Init) {
 					submachineBulletPool.UpdateFromServer (recvData, offset, 2 + 12 * submachineBulletsNum);
 				}
 				offset += 2 + 12 * submachineBulletsNum;
+
 				short sniperBulletsNum = BitConverter.ToInt16 (recvData, offset);
 				if (gameState == GameState.Init) {
 					sniperBulletPool.UpdateFromServer (recvData, offset, 2 + 12 * sniperBulletsNum);
 				}
 				offset += 2 + 12 * submachineBulletsNum;
+
 				short ballDataLen = BitConverter.ToInt16 (recvData, offset);
 				short ballDataByte = BitConverter.ToInt16 (recvData, offset + 2);
 				offset += 4;
@@ -138,18 +149,13 @@ public class Game : MonoBehaviour {
 				for (int j = 0; j < ballDataLen; ++j) {
 					short ballServerId = BitConverter.ToInt16 (recvData, offset);
 					if (!ballPool.Contains ((int)ballServerId)) {
-						float posX = BitConverter.ToSingle (recvData, offset + 2);
-						float posY = BitConverter.ToSingle (recvData, offset + 6);
-						float posZ = BitConverter.ToSingle (recvData, offset + 10);
-						float velX = BitConverter.ToSingle (recvData, offset + 14);
-						float velY = BitConverter.ToSingle (recvData, offset + 18);
-						float velZ = BitConverter.ToSingle (recvData, offset + 22);
-						ballPool.Create ((int)ballServerId, new Vector3 (posX, posY, posZ), new Vector3 (velX, velY, velZ));
+						ballPool.Create ((int)ballServerId, recvData, offset + 2);
 					}
 					offset += ballDataByte;
 					usedBallServerId.Add (ballServerId);
 				}
 				ballPool.RecycleUnusedBalls (usedBallServerId);
+
 				gameState = GameState.Run;
 			}
 		}
@@ -160,19 +166,15 @@ public class Game : MonoBehaviour {
 		recvQueue.Enqueue (recvData);
 	}
 
-	public byte[] GetCurrentGameStatus() {
-		List<byte> result = new List<byte> ();
-		result.AddRange (BitConverter.GetBytes ((short)0));
-		result.AddRange (BitConverter.GetBytes ((short)0));
-		byte[] characterResult = character.Serialize ();
-		result.AddRange (BitConverter.GetBytes ((short)characterResult.Length));
-		result.AddRange (characterResult);
-		byte[] bruteResult = brute.Serialize ();
-		result.AddRange (BitConverter.GetBytes ((short)bruteResult.Length));
-		result.AddRange (bruteResult);
-		result.AddRange (ghostPool.Serialize ());
-		result.AddRange (submachineBulletPool.Serialize ());
-		result.AddRange (sniperBulletPool.Serialize ());
-		return result.ToArray ();
+	public byte[] GetCurrentGameStatus(out int dataSize) {
+		dataSize = 4; // reserved for head
+		Serializer.ToBytes((short)0, serializedData, ref dataSize); // game result
+		Serializer.ToBytes((short)0, serializedData, ref dataSize); // command
+		character.Serialize(serializedData, ref dataSize);
+		brute.Serialize (serializedData, ref dataSize);
+		ghostPool.Serialize (serializedData, ref dataSize);
+		submachineBulletPool.Serialize (serializedData, ref dataSize);
+		sniperBulletPool.Serialize (serializedData, ref dataSize);
+		return serializedData;
 	}
 }

@@ -84,14 +84,10 @@ public class BulletPool : MonoBehaviour {
 		}
 	}
 
-	public byte[] Serialize() {
-		List<byte> result = new List<byte> ();
-		result.AddRange (BitConverter.GetBytes ((short)(poolSize)));
+	public void Serialize(byte[] serializedData, ref int offset) {
+		Serializer.ToBytes ((short)poolSize, serializedData, ref offset);
 		for (int i = 0; i < poolSize; ++i) {
-			result.AddRange (BitConverter.GetBytes (bullets [i].position.x));
-			result.AddRange (BitConverter.GetBytes (bullets [i].position.y));
-			result.AddRange (BitConverter.GetBytes (bullets [i].position.z));
+			Serializer.ToBytes (bullets [i].position, serializedData, ref offset);
 		}
-		return result.ToArray ();
 	}
 }

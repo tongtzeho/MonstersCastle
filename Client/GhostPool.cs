@@ -5,9 +5,12 @@ using UnityEngine;
 
 public class GhostPool : MonoBehaviour {
 
-	private Hashtable activeGhost = new Hashtable (); // key: GhostId in server, value: GhostId in pool (0 to 31)
+	private Dictionary<int, short> activeGhost = new Dictionary<int, short> (); // key: GhostId in server, value: GhostId in pool (0 to 31)
 	private Ghost[] ghostPool = new Ghost[32];
 	private Queue freeIndex = new Queue (); // GhostId in pool (0 to 31)
+
+	private int[] recycleList = new int[64];
+	private int numRecycles = 0;
 
 	void Awake () {
 		for (int i = 0; i < ghostPool.Length; ++i) {
@@ -23,38 +26,37 @@ public class GhostPool : MonoBehaviour {
 		RecycleUnusedGhosts (new HashSet<int> ());
 	}
 
-	public byte[] Serialize() {
-		List<byte> result = new List<byte> ();
+	public void Serialize(byte[] serializedData, ref int offset) {
 		if (activeGhost.Count == 0) {
-			result.AddRange (BitConverter.GetBytes ((short)0));
-			result.AddRange (BitConverter.GetBytes ((short)0));
+			Serializer.ToBytes ((short)0, serializedData, ref offset);
+			Serializer.ToBytes ((short)0, serializedData, ref offset);
 		} else {
-			result.AddRange (BitConverter.GetBytes ((short)activeGhost.Count));
+			Serializer.ToBytes ((short)activeGhost.Count, serializedData, ref offset);
 			bool addByte = false;
-			IDictionaryEnumerator enumerator = activeGhost.GetEnumerator();
-			bool next = enumerator.MoveNext ();
-			while (next) {
-				List<byte> ghostResult = ghostPool [(int)enumerator.Value].Serialize ();
-				if (!addByte) {
+			Dictionary<int, short>.ValueCollection values = activeGhost.Values;
+			foreach (short i in values) {
+				if (!addByte) { // first ghost
 					addByte = true;
-					result.AddRange (BitConverter.GetBytes ((short)ghostResult.Count));
+					int begin = offset;
+					Serializer.ToBytes ((short)0, serializedData, ref offset); // data length of a ghost
+					ghostPool [i].Serialize (serializedData, ref offset);
+					Serializer.ToBytes ((short)(offset - begin - 2), serializedData, ref begin);
+				} else {
+					ghostPool [i].Serialize (serializedData, ref offset);
 				}
-				result.AddRange (ghostResult);
-				next = enumerator.MoveNext ();
 			}
 		}
-		return result.ToArray ();
 	}
 
 	public Ghost GetGhostFromServerId(int id, short hp) {
-		if (activeGhost.Contains (id)) {
+		if (activeGhost.ContainsKey (id)) {
 			return ghostPool [(int)activeGhost [id]];
 		} else {
 			if (freeIndex.Count == 0) {
 				return null;
 			} else {
 				int index = (int)freeIndex.Dequeue ();
-				activeGhost.Add (id, index);
+				activeGhost.Add (id, (short)index);
 				ghostPool [index].Enable ((short)id, hp);
 				return ghostPool[index];
 			}
@@ -62,18 +64,16 @@ public class GhostPool : MonoBehaviour {
 	}
 
 	public void RecycleUnusedGhosts(HashSet<int> usedGhostServerId) {
-		IDictionaryEnumerator enumerator = activeGhost.GetEnumerator();
-		List<int> recycleList = new List<int> ();
-		bool next = enumerator.MoveNext ();
-		while (next) {
-			if (!usedGhostServerId.Contains ((int)enumerator.Key)) {
-				recycleList.Add ((int)enumerator.Key);
-				ghostPool [(int)enumerator.Value].Disable ();
-				freeIndex.Enqueue((int)enumerator.Value);
+		numRecycles = 0;
+		foreach (KeyValuePair<int, short> kvp in activeGhost) {
+			if (!usedGhostServerId.Contains (kvp.Key)) {
+				recycleList [numRecycles] = kvp.Key;
+				++numRecycles;
+				ghostPool [kvp.Value].Disable ();
+				freeIndex.Enqueue ((int)kvp.Value);
 			}
-			next = enumerator.MoveNext ();
 		}
-		for (int i = 0; i < recycleList.Count; ++i) {
+		for (int i = 0; i < numRecycles; ++i) {
 			activeGhost.Remove (recycleList [i]);
 		}
 	}

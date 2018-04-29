@@ -12,6 +12,7 @@ public class AsyncClient : MonoBehaviour {
 	public Login login; // assigned in editor
 	public Game game; // assigned in editor
 
+	private byte[] sendData = new byte[1024];
 	private byte[] recvData = new byte[8192];
 	private string address = "127.0.0.1";
 	private int port = 9121;
@@ -20,6 +21,8 @@ public class AsyncClient : MonoBehaviour {
 	private List<byte> tail = new List<byte> ();
 
 	void Awake () {
+		sendData [0] = 0xed; // encode, same as msg.py
+		sendData [1] = 0xcb;
 		IPAddress ip = IPAddress.Parse(address);
 		clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 		clientSocket.BeginConnect(ip, port, asyncResult => {
@@ -28,36 +31,40 @@ public class AsyncClient : MonoBehaviour {
 		}, null);
 	}
 
-	private void AsyncSend(byte[] sendData) {
-		byte[] sendBuf = new byte[4 + sendData.Length];
-		sendBuf [0] = 0xed; // encode, same as msg.py
-		sendBuf [1] = 0xcb;
-		sendBuf [2] = Convert.ToByte (sendData.Length / 256);
-		sendBuf [3] = Convert.ToByte (sendData.Length % 256);
-		sendData.CopyTo (sendBuf, 4);
-		clientSocket.BeginSend (sendBuf, 0, sendBuf.Length, SocketFlags.None, asyncResult => {
+	private void AsyncSend(byte[] sendBuf, int size) {
+		clientSocket.BeginSend (sendBuf, 0, size, SocketFlags.None, asyncResult => {
 			clientSocket.EndSend(asyncResult);
 		}, null);
 	}
 
 	// only called by Login.cs
 	public void SendString(string sendString) {
-		byte[] sendData = Encoding.ASCII.GetBytes (sendString);
-		AsyncSend (sendData);
+		byte[] stringBytes = Encoding.ASCII.GetBytes (sendString);
+		sendData [2] = Convert.ToByte (stringBytes.Length >> 8);
+		sendData [3] = Convert.ToByte (stringBytes.Length & 0xFF);
+		for (int i = 0; i < stringBytes.Length; ++i) {
+			sendData [i + 4] = stringBytes [i];
+		}
+		AsyncSend (sendData, stringBytes.Length + 4);
 	}
 
 	// only called by Game.cs
 	public void SendCommand(short gameResult, short command) {
-		List<byte> result = new List<byte> ();
-		result.AddRange (BitConverter.GetBytes (gameResult));
-		result.AddRange (BitConverter.GetBytes (command));
-		AsyncSend (result.ToArray ());
+		sendData [2] = 0;
+		sendData [3] = 4;
+		int offset = 4;
+		Serializer.ToBytes (gameResult, sendData, ref offset);
+		Serializer.ToBytes (command, sendData, ref offset);
+		AsyncSend (sendData, 8);
 	}
 
 	void Update () {
 		if (game.IsStart () && game.IsInitialized () && !game.IsGameOver()) {
-			byte[] sendData = game.GetCurrentGameStatus ();
-			AsyncSend (sendData);
+			int dataSize;
+			byte[] sendBuf = game.GetCurrentGameStatus (out dataSize);
+			sendBuf [2] = Convert.ToByte ((dataSize - 4) >> 8);
+			sendBuf [3] = Convert.ToByte ((dataSize - 4) & 0xFF);
+			AsyncSend (sendBuf, dataSize);
 		}
 	}
 
