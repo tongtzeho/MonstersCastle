@@ -13,7 +13,7 @@ public class Game : MonoBehaviour {
 	private bool isStart = false;
 	private GameState gameState = GameState.Init;
 	private short gameResult = 0; // 0 for playing, 1 for win, 2 for lose
-	private Queue<byte[]> recvQueue = new Queue<byte[]>();
+	private Queue<int> recvMessageIndex = new Queue<int>();
 
 	public Character character; // assigned in editor
 	public Brute brute; // assigned in editor
@@ -29,7 +29,7 @@ public class Game : MonoBehaviour {
 	private HashSet<int> usedGhostServerId = new HashSet<int>();
 	private HashSet<int> usedBallServerId = new HashSet<int>();
 
-	private byte[] serializedData = new byte[2048];
+	private byte[] serializedData = new byte[1024];
 
 	void Awake() {
 		BulletPool[] bulletPools = GameObject.Find ("BulletPool").GetComponents<BulletPool> ();
@@ -89,13 +89,13 @@ public class Game : MonoBehaviour {
 		control.Reset ();
 		control.Disallow ();
 		gameState = GameState.Init;
-		recvQueue.Clear ();
+		recvMessageIndex.Clear ();
 		System.GC.Collect ();
 	}
 
 	void Update () {
-		while (recvQueue.Count > 0) {
-			byte[] recvData = recvQueue.Dequeue ();
+		while (recvMessageIndex.Count > 0) {
+			byte[] recvData = client.GetMessageContent (recvMessageIndex.Dequeue ());
 			gameResult = BitConverter.ToInt16 (recvData, 0);
 			short level = BitConverter.ToInt16 (recvData, 2);
 			short gateHp = BitConverter.ToInt16 (recvData, 4);
@@ -161,9 +161,9 @@ public class Game : MonoBehaviour {
 		}
 	}
 
-	// called by NetworkThread.Receive
-	public void AppendGameStatusFromServer(byte[] recvData) {
-		recvQueue.Enqueue (recvData);
+	// only called by NetworkThread.AsyncReceive
+	public void AppendGameStatusFromServer(int index) {
+		recvMessageIndex.Enqueue (index);
 	}
 
 	public byte[] GetCurrentGameStatus(out int dataSize) {

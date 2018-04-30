@@ -2,15 +2,16 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Ball : MonoBehaviour {
+public class Ball {
 
 	private Vector3 resetPos = new Vector3 (0, -10, 0);
 	private Vector3 velocity = new Vector3();
 	private bool isAlive = false;
-	private float rotation = 150.0f;
+	private Transform transform = null;
 
-	void Start() {
-		transform.position = resetPos;
+	public Ball(Transform transform) {
+		this.transform = transform;
+		this.transform.position = resetPos;
 	}
 
 	public bool isEnabled() {
@@ -28,10 +29,7 @@ public class Ball : MonoBehaviour {
 		transform.position = resetPos;
 	}
 
-	void Update () {
-		if (isAlive) {
-			transform.position += velocity * Time.deltaTime;
-			transform.Rotate (0, rotation * Time.deltaTime, 0);
-		}
+	public void Move () {
+		transform.position += velocity * Time.deltaTime;
 	}
 }

@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -13,6 +13,9 @@ public class BulletUI : MonoBehaviour {
 	private UnityEngine.UI.Image submachineBulletsImageL;
 	private UnityEngine.UI.Image submachineBulletsImageR;
 	private bool isSniperImageActive = true;
+
+	private short prevBulletCapacity = -1;
+	private short prevBulletOwn = -1;
 
 	void Start () {
 		text = transform.Find ("BulletText").gameObject.GetComponent<UnityEngine.UI.Text> ();
@@ -30,7 +33,11 @@ public class BulletUI : MonoBehaviour {
 		short bulletCapacity;
 		short bulletOwn;
 		controlScript.GetBulletInfo (out bullet, out bulletCapacity, out bulletOwn);
-		text.text = string.Concat (bulletCapacity.ToString (), " | ", bulletOwn.ToString ());
+		if (bulletCapacity != prevBulletCapacity || bulletOwn != prevBulletOwn) {
+			text.text = string.Concat (bulletCapacity.ToString (), " | ", bulletOwn.ToString ());
+			prevBulletCapacity = bulletCapacity;
+			prevBulletOwn = bulletOwn;
+		}
 		if (controlScript.GetActiveGun () == sniper) {
 			if (!isSniperImageActive) {
 				sniperImage.SetActive (true);

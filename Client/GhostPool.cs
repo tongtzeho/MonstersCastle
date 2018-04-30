@@ -7,7 +7,7 @@ public class GhostPool : MonoBehaviour {
 
 	private Dictionary<int, short> activeGhost = new Dictionary<int, short> (); // key: GhostId in server, value: GhostId in pool (0 to 31)
 	private Ghost[] ghostPool = new Ghost[32];
-	private Queue freeIndex = new Queue (); // GhostId in pool (0 to 31)
+	private Queue<int> freeIndex = new Queue<int> (); // GhostId in pool (0 to 31)
 
 	private int[] recycleList = new int[64];
 	private int numRecycles = 0;
@@ -55,7 +55,7 @@ public class GhostPool : MonoBehaviour {
 			if (freeIndex.Count == 0) {
 				return null;
 			} else {
-				int index = (int)freeIndex.Dequeue ();
+				int index = freeIndex.Dequeue ();
 				activeGhost.Add (id, (short)index);
 				ghostPool [index].Enable ((short)id, hp);
 				return ghostPool[index];

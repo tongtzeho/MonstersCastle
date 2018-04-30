@@ -7,7 +7,7 @@ public class BallPool : MonoBehaviour {
 
 	private Dictionary<int, short> activeBall = new Dictionary<int, short> (); // key: BallId in server, value: BallId in pool (0 to 31)
 	private Ball[] ballPool = new Ball[32];
-	private Queue freeIndex = new Queue (); // BallId in pool (0 to 31)
+	private Queue<int> freeIndex = new Queue<int> (); // BallId in pool (0 to 31)
 
 	private int[] recycleList = new int[64];
 	private int numRecycles = 0;
@@ -16,7 +16,7 @@ public class BallPool : MonoBehaviour {
 		for (int i = 0; i < ballPool.Length; ++i) {
 			GameObject newBall = Instantiate (Resources.Load ("Prefabs/Ball") as GameObject, transform);
 			newBall.name = "Ball" + i.ToString ();
-			ballPool [i] = newBall.GetComponent<Ball> ();
+			ballPool [i] = new Ball (newBall.transform);
 			ballPool [i].Disable ();
 			freeIndex.Enqueue (i);
 		}
@@ -34,7 +34,7 @@ public class BallPool : MonoBehaviour {
 		if (freeIndex.Count == 0) {
 			return null;
 		} else {
-			int index = (int)freeIndex.Dequeue ();
+			int index = freeIndex.Dequeue ();
 			activeBall.Add (serverId, (short)index);
 			Vector3 position = new Vector3 (BitConverter.ToSingle (recvData, beginIndex), BitConverter.ToSingle (recvData, beginIndex + 4), BitConverter.ToSingle (recvData, beginIndex + 8));
 			Vector3 velocity = new Vector3 (BitConverter.ToSingle (recvData, beginIndex + 12), BitConverter.ToSingle (recvData, beginIndex + 16), BitConverter.ToSingle (recvData, beginIndex + 20));
@@ -55,6 +55,14 @@ public class BallPool : MonoBehaviour {
 		}
 		for (int i = 0; i < numRecycles; ++i) {
 			activeBall.Remove (recycleList [i]);
+		}
+	}
+
+	void Update() {
+		for (int i = 0; i < ballPool.Length; ++i) {
+			if (ballPool [i].isEnabled ()) {
+				ballPool [i].Move ();
+			}
 		}
 	}
 }

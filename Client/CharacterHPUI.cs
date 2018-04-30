@@ -12,12 +12,20 @@ public class CharacterHPUI : MonoBehaviour {
 	private Vector3 rebornTextDisablePos;
 	private UnityEngine.UI.Text rebornTime;
 
+	private short prevHp = -1;
+	private short prevMaxHp = -1;
+
+	private string[] rebornTimeString = new string[10];
+
 	void Awake () {
 		hpBar = transform.Find ("PlayerHPBar").gameObject.GetComponent<UnityEngine.UI.Image> ();
 		hpText = transform.Find ("PlayerHPText").gameObject.GetComponent<UnityEngine.UI.Text> ();
 		rebornTime = transform.Find ("RebornText/RebornTime").gameObject.GetComponent<UnityEngine.UI.Text> ();
 		rebornTextDefaultPos = rebornTextTransform.position;
 		rebornTextDisablePos = rebornTextDefaultPos + new Vector3 (0, 10000, 0);
+		for (int i = 0; i < 10; ++i) {
+			rebornTimeString [i] = i.ToString ();
+		}
 	}
 
 	void Start() {
@@ -28,12 +36,16 @@ public class CharacterHPUI : MonoBehaviour {
 		if (character.maxHp != 0) {
 			hpBar.fillAmount = ((float)character.hp) / character.maxHp;
 		}
-		hpText.text = string.Concat ("生命值\n", character.hp.ToString (), " / ", character.maxHp.ToString ());
+		if (character.hp != prevHp || character.maxHp != prevMaxHp) {
+			hpText.text = string.Concat ("生命值\n", character.hp.ToString (), " / ", character.maxHp.ToString ());
+			prevHp = character.hp;
+			prevMaxHp = character.maxHp;
+		}
 		if (character.isAlive == 1) {
 			rebornTextTransform.position = rebornTextDisablePos;
 		} else {
 			rebornTextTransform.position = rebornTextDefaultPos;
-			rebornTime.text = ((int)(character.rebornTimeLeft + 1)).ToString ();
+			rebornTime.text = rebornTimeString [((int)(character.rebornTimeLeft + 1))];
 		}
 	}
 }
