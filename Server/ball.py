@@ -23,7 +23,7 @@ class ball:
 		self.position = start
 		self.scene = scene
 		self.time = 0
-		self.endTime = 4.0
+		self.endTime = 4.6
 		self.radius = 0.32
 		self.attack = 8
 		
