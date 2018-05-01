@@ -3,10 +3,11 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-// only use this script to generate scene's triangles for server while editing. remove this script before building
+// only use this script to generate scene's triangles for server while editing
 public class Triangle : MonoBehaviour {
 
-	void Start () {
+	[ContextMenu("Generate triangle.bin")]
+	public void Generate () {
 		List<Vector3> vertices = new List<Vector3> ();
 		List<uint> indices = new List<uint> ();
 		GameObject environment = GameObject.Find ("Environment");

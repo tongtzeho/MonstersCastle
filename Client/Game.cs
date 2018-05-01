@@ -22,6 +22,7 @@ public class Game : MonoBehaviour {
 	private BulletPool sniperBulletPool;
 	public BallPool ballPool; // assigned in editor
 	public Control control; // assigned in editor
+	public GateUI gateUI; // assigned in editor
 	public GameUIPanel gameUIPanel; // assigned in editor
 	public BGM gameBGM; // assigned in editor
 	public AsyncClient client; // assigned in editor
@@ -84,6 +85,7 @@ public class Game : MonoBehaviour {
 	public void Reset() {
 		isStart = false;
 		gameBGM.AllStop ();
+		brute.Reset ();
 		ghostPool.Reset ();
 		ballPool.Reset ();
 		control.Reset ();
@@ -99,12 +101,14 @@ public class Game : MonoBehaviour {
 			gameResult = BitConverter.ToInt16 (recvData, 0);
 			short level = BitConverter.ToInt16 (recvData, 2);
 			short gateHp = BitConverter.ToInt16 (recvData, 4);
+			short gateMaxHp = BitConverter.ToInt16 (recvData, 6);
 			if (gameResult == 1) {
 				Reset ();
 				gameUIPanel.Victory ();
 				gameBGM.Victory ();
 			} else {
-				int offset = 6;
+				gateUI.SetGateCurrentState (gateHp, gateMaxHp);
+				int offset = 8;
 
 				short characterDataLen = BitConverter.ToInt16 (recvData, offset);
 				character.UpdateFromServer (gameState == GameState.Init, recvData, offset + 2, (int)characterDataLen);

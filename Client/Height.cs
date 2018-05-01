@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-// only use this script to generate height for server while editing. remove this script before building
+// only use this script to generate height for server while editing
 public class Height : MonoBehaviour {
 
 	private float height = 4.5f;
@@ -14,7 +14,8 @@ public class Height : MonoBehaviour {
 	private float maxZ = 70.0f;
 	private float d = 0.1f;
 
-	void Start () {
+	[ContextMenu("Generate height.bin")]
+	public void Generate () {
 		int numX = (int)((maxX - minX) / d);
 		int numZ = (int)((maxZ - minZ) / d);
 		BinaryWriter bw = new BinaryWriter(new FileStream("height.bin", FileMode.Create));

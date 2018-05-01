@@ -83,6 +83,11 @@ public class Brute : MonoBehaviour {
 		}
 	}
 
+	public void Reset() {
+		transform.position = new Vector3 (transform.position.x, -5, transform.position.z);
+		SetAnimationAction (2);
+	}
+
 	void Update() {
 		setAttackAction = false;
 	}
