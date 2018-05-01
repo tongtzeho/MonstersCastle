@@ -26,6 +26,9 @@ class ball:
 		self.endTime = 4.6
 		self.radius = 0.32
 		self.attack = 8
+		self.gateBottom = [-0.06, 3, -2.6]
+		self.gateTop = [-0.06, 6, -2.6]
+		self.gateRadius = 4.0
 		
 	def update(self, dt, character):
 		self.time += dt
@@ -34,9 +37,16 @@ class ball:
 			return [-1, 0, 0]
 		else:
 			self.nextPosition = [self.position[0]+self.velocity[0]*dt, self.position[1]+self.velocity[1]*dt, self.position[2]+self.velocity[2]*dt]
-			if character.isAlive and self.scene.getSegmentDistanceSquare(self.position, self.nextPosition, character.getBodyBottom(), character.getBodyTop()) <= self.radius + character.radius:
-				print "Ball<%d> Bomb (Hit Character)" % self.id
-				return [-1, self.attack, 0]
+			if character.isAlive and self.scene.getSegmentDistanceSquare(self.position, self.nextPosition, character.getBodyBottom(), character.getBodyTop()) <= (self.radius + character.radius)*(self.radius + character.radius):
+				if self.scene.getSegmentDistanceSquare(self.position, self.nextPosition, self.gateBottom, self.gateTop) <= (self.radius + self.gateRadius)*(self.radius + self.gateRadius):
+					print "Ball<%d> Bomb (Hit Character and Gate)" % self.id
+					return [-1, self.attack, self.attack]
+				else:
+					print "Ball<%d> Bomb (Hit Character)" % self.id
+					return [-1, self.attack, 0]
+			elif self.scene.getSegmentDistanceSquare(self.position, self.nextPosition, self.gateBottom, self.gateTop) <= (self.radius + self.gateRadius)*(self.radius + self.gateRadius):
+				print "Ball<%d> Bomb (Hit Gate)" % self.id
+				return [-1, 0, self.attack]
 			elif self.scene.capsuleCollideDetection(self.position, self.nextPosition, self.radius):
 				print "Ball<%d> Bomb (Hit Environment)" % self.id
 				return [-1, 0, 0]

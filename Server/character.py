@@ -14,7 +14,7 @@ class character:
 		self.prop = [0, 0, 0, 0] # 0 for nothing, 1 for +hp, 2 for barrier, 3 for +atk
 		self.buffTimeLeft = [0.0, 0.0, 0.0]
 		self.rebornTime = 6.0
-		self.radius = 0.26
+		self.radius = 0.35
 		
 	def reborn(self):
 		self.isAlive = 1
@@ -38,6 +38,7 @@ class character:
 		return [self.position[0], self.position[1]+1.57, self.position[2]]
 		
 	def die(self):
+		self.hp = 0
 		self.isAlive = 0
 		self.rebornTimeLeft = self.rebornTime
 		print "Character Die"
@@ -51,8 +52,7 @@ class character:
 			if self.rebornTimeLeft <= 0:
 				self.reborn()
 		else: # alive
-			if self.hp <= 0:
-				self.hp = 0
+			if self.hp <= 0 or self.position[1] <= -2:
 				self.die()
 		if self.debug:
 			self.log()

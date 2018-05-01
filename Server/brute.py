@@ -48,6 +48,7 @@ class brute:
 		
 	def update(self, dt, character):
 		damageToCharacter = 0
+		damageToGate = 0
 		if self.isAlive:
 			if self.hp <= 0:
 				self.die()
@@ -70,11 +71,12 @@ class brute:
 					else:
 						if self.attackShakeTimeLeft > 0 and self.attackShakeTimeLeft - dt <= 0: # attack shake ends at the moment
 							damageToCharacter = self.attack(character)
+							damageToGate = self.atk[self.level - 1]
 						self.attackShakeTimeLeft -= dt
 						self.action = 2
 		if self.debug:
 			self.log()
-		return [damageToCharacter, 0]
+		return [damageToCharacter, damageToGate]
 		
 	def attack(self, character):
 		if self.isAlive and character.isAlive:

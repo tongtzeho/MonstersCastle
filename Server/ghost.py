@@ -15,7 +15,7 @@ class ghost:
 		self.rotationY = 0.0
 		self.action = 2 # 1 for walk, 2 for idle, 3 for attack, 4 for die, 5 for bomb
 		self.scalarVelocity = 2.0
-		self.attackVelocityRate = 0.5
+		self.attackVelocityRate = 0.4
 		self.setWay()
 		self.phase = -1
 		self.bornCurrTime = 0
@@ -37,7 +37,7 @@ class ghost:
 		if isBorning:
 			self.attackCD = random.random()+1.5
 		else:
-			self.attackCD = random.random()*4+4
+			self.attackCD = random.random()*4.5+4
 	
 	def setWay(self):
 		self.checkPointId = int(random.random()*6)
@@ -45,8 +45,8 @@ class ghost:
 			[[-19.5, 46], [-21.2, 43], [-21.2, 17], [-17.4, 13.2], [-12.5, 13.2], [-8.5, 6.8], [-2.5, 1.8]], # Left 1
 			[[-19.5, 46], [-17.8, 43], [-17.8, 16], [-17.1, 14.7], [-9, 14.7], [-1.5, 1.8]], # Left 2
 			[[-6, 49], [-5, 16], [-1, 1.8]], # Mid 1
-			[[-6, 49], [-2, 43], [-0.5, 1.8]], # Mid 2
-			[[14.6, 54], [16, 40], [15, 17], [9, 7], [2.5, 1.8]], # Right 1
+			[[-6, 49], [-2, 43], [-2, 21], [1, 15], [-0.5, 1.8]], # Mid 2
+			[[14.6, 54], [16, 40], [19.7, 23], [15, 17], [9, 7], [2.5, 1.8]], # Right 1
 			[[14.6, 54], [13.5, 46], [9, 34], [7, 18], [1.7, 1.8]] # Right 2
 		]
 		self.checkPoint = checkPoints[self.checkPointId]
@@ -136,14 +136,16 @@ class ghost:
 			self.rotationY = 180.0
 			self.action = 5
 			damageToCharacter = 0
+			damageToGate = 0
 			if self.bombCurrTime == 0:
 				damageToCharacter = self.bomb(character)
+				damageToGate = 100
 				print "Ghost(%d) Bomb" % self.id
 			self.bombCurrTime += dt
 			if self.bombCurrTime >= self.bombTotalTime:
-				return [-1, damageToCharacter, 0, None]
+				return [-1, damageToCharacter, damageToGate, None]
 			else:
-				return [0, damageToCharacter, 0, None]
+				return [0, damageToCharacter, damageToGate, None]
 		if self.hp > 0: # alive
 			if self.phase == -1: # borning
 				if self.bornCurrTime == 0:

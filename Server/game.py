@@ -31,7 +31,8 @@ class game(threading.Thread): # run as a game monitor client
 		self.gameResult = 0 # 0 for playing, 1 for win, 2 for lose
 		self.level = 0
 		self.maxLevel = 5
-		self.gateHp = 0
+		self.gateHp = 10000
+		self.gateMaxHp = 10000
 		self.gameLock.release()
 	
 	def run(self): # override
@@ -79,13 +80,22 @@ class game(threading.Thread): # run as a game monitor client
 					self.level += 1
 				elif self.level == self.maxLevel and self.brute.isAlive == 0:
 					self.level = self.maxLevel+1 # ghost will not born
-				if self.level == self.maxLevel+1 and len(self.ghosts) == 0:
+				if self.gateHp <= 0:
+					self.gameResult = 1 # TODO: change to -1
+				elif self.level == self.maxLevel+1 and len(self.ghosts) == 0:
 					self.gameResult = 1
 				damageByGhosts = self.updateGhosts(deltaTime)
-				damage = int(damageByBalls[0]+damageByBrute[0]+damageByGhosts[0])
-				if damage > 0:
-					self.character.hp -= damage
-					print "Character Hurt {%d}" % damage
+				damageToCharacter = int(damageByBalls[0]+damageByBrute[0]+damageByGhosts[0])
+				if damageToCharacter > 0:
+					self.character.hp -= damageToCharacter
+					print "Character Hurt {%d}" % damageToCharacter
+				# TODO: if character.propTimeLeft[1] > 0 ...
+				damageToGate = int(damageByBalls[1]+damageByBrute[1]+damageByGhosts[1])
+				if damageToGate > 0:
+					self.gateHp -= damageToGate
+					if self.gateHp < 0:
+						self.gateHp = 0
+					print "Gate Hurt {%d}, Left {%d}" % (damageToGate, self.gateHp)
 				self.character.update(deltaTime)
 			except:
 				print ("game.py update error")
@@ -99,6 +109,7 @@ class game(threading.Thread): # run as a game monitor client
 			if ret[0] == -1:
 				delList.append(k)
 			damage[0] += ret[1]
+			damage[1] += ret[2]
 		for k in delList:
 			self.balls.pop(k)
 		return damage
@@ -114,6 +125,7 @@ class game(threading.Thread): # run as a game monitor client
 			if ret[0] == -1:
 				delList.append(k)
 			damage[0] += ret[1]
+			damage[1] += ret[2]
 			if ret[3] != None: # new ball
 				self.balls[ret[3].id] = ret[3]
 		for k in delList:
@@ -123,7 +135,7 @@ class game(threading.Thread): # run as a game monitor client
 	def serialize(self):
 		head = struct.pack("=4s2i16s", "^^^@", self.recog, len(self.username), self.username)
 		self.gameLock.acquire()
-		gameCurrStatus = struct.pack("=hhh", self.gameResult, self.level, self.gateHp)
+		gameCurrStatus = struct.pack("=hhhh", self.gameResult, self.level, self.gateHp, self.gateMaxHp)
 		if self.gameResult != 0:
 			self.gameLock.release()
 			return head + gameCurrStatus
