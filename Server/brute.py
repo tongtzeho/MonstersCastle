@@ -8,7 +8,7 @@ class brute:
 		self.debug = False
 		self.scene = scene
 		self.level = 0
-		self.maxHp = [300, 600, 1000, 1500, 2000]
+		self.maxHp = [400, 800, 1200, 1600, 2000]
 		self.atk = [100, 150, 200, 250, 300]
 		self.isAlive = 0
 		self.hp = 0
@@ -20,8 +20,8 @@ class brute:
 		self.velocity = [-0.1071428571, -3.5] # to [1, 5]
 		self.walkTime = 14.0
 		self.rebornTime = 1.733
-		self.attackInterval = 2.5
-		self.attackCD = 1.25
+		self.attackInterval = 2.2
+		self.attackCD = 1.1
 		self.attackShakeTime = 0.48
 		self.attackShakeTimeLeft = 0
 		

@@ -2,7 +2,7 @@
 # Python 2.7.14
 
 import socket, threading, random, struct, time
-import msg, character, brute, ghost, bullets
+import msg, character, brute, ghost, props
 
 class game(threading.Thread): # run as a game monitor client
 	def __init__(self, username, address, port, scene):
@@ -25,14 +25,15 @@ class game(threading.Thread): # run as a game monitor client
 		self.ghostId = 1
 		self.ghostMax = 2000
 		self.balls = {}
-		self.submachineBullets = bullets.bullets(8)
-		self.sniperBullets = bullets.bullets(8)
+		self.submachineBullets = props.props(12)
+		self.sniperBullets = props.props(12)
+		self.medicines = props.props(5)
 		self.gameTime = 0
 		self.gameResult = 0 # 0 for playing, 1 for win, 2 for lose
 		self.level = 0
 		self.maxLevel = 5
-		self.gateHp = 10000
-		self.gateMaxHp = 10000
+		self.gateMaxHp = 8000
+		self.gateHp = self.gateMaxHp
 		self.gameLock.release()
 	
 	def run(self): # override
@@ -64,9 +65,6 @@ class game(threading.Thread): # run as a game monitor client
 			if self.waitTime >= waitTime:
 				return True
 		return False
-		
-	def allMonsterReborn(self):
-		self.brute.reborn()
 	
 	def update(self, deltaTime):
 		self.gameLock.acquire()
@@ -89,7 +87,6 @@ class game(threading.Thread): # run as a game monitor client
 				if damageToCharacter > 0:
 					self.character.hp -= damageToCharacter
 					print "Character Hurt {%d}" % damageToCharacter
-				# TODO: if character.propTimeLeft[1] > 0 ...
 				damageToGate = int(damageByBalls[1]+damageByBrute[1]+damageByGhosts[1])
 				if damageToGate > 0:
 					self.gateHp -= damageToGate
@@ -157,6 +154,7 @@ class game(threading.Thread): # run as a game monitor client
 					ghostsResult += g.serialize()
 		submachineBulletsResult = self.submachineBullets.serialize()
 		sniperBulletsResult = self.sniperBullets.serialize()
+		medicinesResult = self.medicines.serialize()
 		if len(self.balls) == 0:
 			ballsResult = struct.pack("=hh", 0, 0)
 		else:
@@ -170,7 +168,7 @@ class game(threading.Thread): # run as a game monitor client
 				else:
 					ballsResult += b.serialize()
 		self.gameLock.release()
-		return head + gameCurrStatus + characterResult + bruteResult + ghostsResult + submachineBulletsResult + sniperBulletsResult + ballsResult
+		return head + gameCurrStatus + characterResult + bruteResult + ghostsResult + submachineBulletsResult + sniperBulletsResult + medicinesResult + ballsResult
 		
 	def handle(self, data):
 		ret = 0
@@ -195,6 +193,9 @@ class game(threading.Thread): # run as a game monitor client
 						sniperBulletsNum = struct.unpack("=h", data[offset:offset+2])[0]
 						sniperBulletsData = data[offset:offset+2+12*sniperBulletsNum]
 						offset += 2+12*sniperBulletsNum
+						medicinesNum = struct.unpack("=h", data[offset:offset+2])[0]
+						medicinesData = data[offset:offset+2+12*medicinesNum]
+						offset += 2+12*medicinesNum
 						self.gameLock.acquire()
 						try:
 							self.character.handle(characterData)
@@ -207,6 +208,7 @@ class game(threading.Thread): # run as a game monitor client
 								offset += ghostsDataByte
 							self.submachineBullets.handle(submachineBulletsData)
 							self.sniperBullets.handle(sniperBulletsData)
+							self.medicines.handle(medicinesData)
 						except:
 							print ("game.py handle error")
 							pass

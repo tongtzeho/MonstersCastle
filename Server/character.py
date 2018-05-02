@@ -8,12 +8,16 @@ class character:
 		self.debug = False
 		self.reborn()
 		self.sniperBulletNum = 5
-		self.sniperBulletOwn = 30
+		self.sniperBulletOwn = 25
 		self.submachineBulletNum = 30
 		self.submachineBulletOwn = 150
-		self.prop = [0, 0, 0, 0] # 0 for nothing, 1 for +hp, 2 for barrier, 3 for +atk
-		self.buffTimeLeft = [0.0, 0.0, 0.0]
-		self.rebornTime = 6.0
+		self.medicineNum = 0
+		self.upHpLeft = 0
+		self.buffTimeLeft = 0.0
+		self.upHpTick = 0.16
+		self.upHpOnce = 50 # +50Hp in 8sec
+		self.medicineTaking = 0
+		self.rebornTime = 7.7
 		self.radius = 0.35
 		
 	def reborn(self):
@@ -41,12 +45,11 @@ class character:
 		self.hp = 0
 		self.isAlive = 0
 		self.rebornTimeLeft = self.rebornTime
+		self.upHpLeft = 0
+		self.buffTimeLeft = 0.0
 		print "Character Die"
 	
 	def update(self, dt):
-		self.buffTimeLeft[0] = max(0, self.buffTimeLeft[0] - dt)
-		self.buffTimeLeft[1] = max(0, self.buffTimeLeft[1] - dt)
-		self.buffTimeLeft[2] = max(0, self.buffTimeLeft[2] - dt)
 		if self.isAlive == 0: # dead
 			self.rebornTimeLeft -= dt
 			if self.rebornTimeLeft <= 0:
@@ -54,18 +57,39 @@ class character:
 		else: # alive
 			if self.hp <= 0 or self.position[1] <= -2:
 				self.die()
+			else:
+				if self.buffTimeLeft != 0.0:
+					self.buffTimeLeft -= dt
+					currUpHpLeft = int(self.buffTimeLeft/self.upHpTick)
+					if currUpHpLeft < self.upHpLeft:
+						self.hp += self.upHpLeft-currUpHpLeft
+						if self.hp > self.maxHp:
+							self.hp = self.maxHp
+						self.upHpLeft = currUpHpLeft
+						if self.upHpLeft == 0:
+							self.buffTimeLeft = 0.0
+				if self.medicineTaking > 0:
+					self.medicineTaking -= 1
+					if self.buffTimeLeft == 0.0:
+						self.buffTimeLeft = self.upHpTick*(self.upHpOnce+1)-0.0001
+						self.upHpLeft = self.upHpOnce
+					else:
+						self.buffTimeLeft += self.upHpTick*self.upHpOnce
+						self.upHpLeft += self.upHpOnce
 		if self.debug:
 			self.log()
 			
 	def handle(self, data):
 		if self.isAlive:
 			self.position[0], self.position[1], self.position[2], self.rotationY = struct.unpack("=4f", data[:16])
-		self.sniperBulletNum, self.sniperBulletOwn, self.submachineBulletNum, self.submachineBulletOwn = struct.unpack("=4h", data[16:24])
-		self.prop[0], self.prop[1], self.prop[2], self.prop[3] = struct.unpack("=4h", data[24:32])
+		self.prevMedicineNum = self.medicineNum
+		self.sniperBulletNum, self.sniperBulletOwn, self.submachineBulletNum, self.submachineBulletOwn, self.medicineNum = struct.unpack("=5h", data[16:26])
+		if self.medicineNum < self.prevMedicineNum:
+			self.medicineTaking += self.prevMedicineNum - self.medicineNum
 	
 	def serialize(self):
-		return struct.pack("=hf2h4f8h3f", self.isAlive, self.rebornTimeLeft, self.hp, self.maxHp, self.position[0], self.position[1], self.position[2], self.rotationY, self.sniperBulletNum, self.sniperBulletOwn, self.submachineBulletNum, self.submachineBulletOwn, self.prop[0], self.prop[1], self.prop[2], self.prop[3], self.buffTimeLeft[0], self.buffTimeLeft[1], self.buffTimeLeft[2])
+		return struct.pack("=hf2h4f6h", self.isAlive, self.rebornTimeLeft, self.hp, self.maxHp, self.position[0], self.position[1], self.position[2], self.rotationY, self.sniperBulletNum, self.sniperBulletOwn, self.submachineBulletNum, self.submachineBulletOwn, self.medicineNum, self.upHpLeft)
 	
 	def log(self):
-		print [self.isAlive, self.rebornTimeLeft, self.hp], self.position, [self.sniperBulletNum, self.sniperBulletOwn], [self.submachineBulletNum, self.submachineBulletOwn], self.prop, self.buffTimeLeft
+		print [self.isAlive, self.rebornTimeLeft, self.hp], self.position, [self.sniperBulletNum, self.sniperBulletOwn], [self.submachineBulletNum, self.submachineBulletOwn], self.medicineNum, self.upHpLeft
 			
