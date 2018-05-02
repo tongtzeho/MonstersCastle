@@ -8,6 +8,7 @@ public class GhostPool : MonoBehaviour {
 	private Dictionary<int, short> activeGhost = new Dictionary<int, short> (); // key: GhostId in server, value: GhostId in pool (0 to 31)
 	private Ghost[] ghostPool = new Ghost[32];
 	private Queue<int> freeIndex = new Queue<int> (); // GhostId in pool (0 to 31)
+	private HashSet<int> emptySet = new HashSet<int> ();
 
 	private int[] recycleList = new int[64];
 	private int numRecycles = 0;
@@ -23,7 +24,7 @@ public class GhostPool : MonoBehaviour {
 	}
 
 	public void Reset() {
-		RecycleUnusedGhosts (new HashSet<int> ());
+		RecycleUnusedGhosts (emptySet);
 	}
 
 	public void Serialize(byte[] serializedData, ref int offset) {

@@ -8,6 +8,7 @@ public class BallPool : MonoBehaviour {
 	private Dictionary<int, short> activeBall = new Dictionary<int, short> (); // key: BallId in server, value: BallId in pool (0 to 31)
 	private Ball[] ballPool = new Ball[32];
 	private Queue<int> freeIndex = new Queue<int> (); // BallId in pool (0 to 31)
+	private HashSet<int> emptySet = new HashSet<int> ();
 
 	private int[] recycleList = new int[64];
 	private int numRecycles = 0;
@@ -23,7 +24,7 @@ public class BallPool : MonoBehaviour {
 	}
 
 	public void Reset() {
-		RecycleUnusedBalls (new HashSet<int> ());
+		RecycleUnusedBalls (emptySet);
 	}
 
 	public bool Contains(int serverId) {

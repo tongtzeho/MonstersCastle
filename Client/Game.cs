@@ -20,6 +20,7 @@ public class Game : MonoBehaviour {
 	public GhostPool ghostPool; // assigned in editor
 	private BulletPool submachineBulletPool;
 	private BulletPool sniperBulletPool;
+	public MedicinePool medicinePool; // assigned in editor
 	public BallPool ballPool; // assigned in editor
 	public Control control; // assigned in editor
 	public GateUI gateUI; // assigned in editor
@@ -99,7 +100,7 @@ public class Game : MonoBehaviour {
 		while (recvMessageIndex.Count > 0) {
 			byte[] recvData = client.GetMessageContent (recvMessageIndex.Dequeue ());
 			gameResult = BitConverter.ToInt16 (recvData, 0);
-			short level = BitConverter.ToInt16 (recvData, 2);
+			//short level = BitConverter.ToInt16 (recvData, 2);
 			short gateHp = BitConverter.ToInt16 (recvData, 4);
 			short gateMaxHp = BitConverter.ToInt16 (recvData, 6);
 			if (gameResult == 1) {
@@ -144,7 +145,13 @@ public class Game : MonoBehaviour {
 				if (gameState == GameState.Init) {
 					sniperBulletPool.UpdateFromServer (recvData, offset, 2 + 12 * sniperBulletsNum);
 				}
-				offset += 2 + 12 * submachineBulletsNum;
+				offset += 2 + 12 * sniperBulletsNum;
+
+				short medicinesNum = BitConverter.ToInt16 (recvData, offset);
+				if (gameState == GameState.Init) {
+					medicinePool.UpdateFromServer (recvData, offset, 2 + 12 * medicinesNum);
+				}
+				offset += 2 + 12 * medicinesNum;
 
 				short ballDataLen = BitConverter.ToInt16 (recvData, offset);
 				short ballDataByte = BitConverter.ToInt16 (recvData, offset + 2);
@@ -179,6 +186,7 @@ public class Game : MonoBehaviour {
 		ghostPool.Serialize (serializedData, ref dataSize);
 		submachineBulletPool.Serialize (serializedData, ref dataSize);
 		sniperBulletPool.Serialize (serializedData, ref dataSize);
+		medicinePool.Serialize (serializedData, ref dataSize);
 		return serializedData;
 	}
 }

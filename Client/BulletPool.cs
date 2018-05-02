@@ -17,9 +17,9 @@ public class BulletPool : MonoBehaviour {
 	private Queue<int> freeBullets = new Queue<int>();
 	private float enqueueThresholdY = -40;
 	private Vector3 resetPosition = new Vector3(0, -50, 0);
-	private int poolSize = 8;
+	private int poolSize = 12;
 	private int queryId = 0;
-	private float distSqrThreshold = 0.9f*0.9f;
+	private float distSqrThreshold = 1;
 
 	void Awake () {
 		bullets = new Transform[poolSize];
@@ -55,7 +55,7 @@ public class BulletPool : MonoBehaviour {
 	}
 
 	void Update () {
-		int queryNum = 3;
+		int queryNum = 4;
 		for (int i = 0; i < queryNum; ++i) {
 			if ((bullets [queryId].position - character.position).sqrMagnitude < distSqrThreshold) {
 				gun.AddBulletOwn (addBulletOwn);
@@ -72,22 +72,27 @@ public class BulletPool : MonoBehaviour {
 
 	// only updates when firstly connect to a game
 	public void UpdateFromServer (byte[] recvData, int beginIndex, int length) {
-		int num = BitConverter.ToInt16 (recvData, beginIndex);
-		if (num == poolSize) {
-			freeBullets.Clear ();
-			for (int i = 0; i < poolSize; ++i) {
-				bullets [i].position = new Vector3 (BitConverter.ToSingle (recvData, beginIndex + 2 + i * 12), BitConverter.ToSingle (recvData, beginIndex + 6 + i * 12), BitConverter.ToSingle (recvData, beginIndex + 10 + i * 12));
-				if (bullets [i].position.y < enqueueThresholdY) {
-					freeBullets.Enqueue (i);
-				}
-			}
+		int numBullet = (int)BitConverter.ToInt16 (recvData, beginIndex);
+		freeBullets.Clear ();
+		for (int i = 0; i < numBullet; ++i) {
+			bullets [i].position = new Vector3 (BitConverter.ToSingle (recvData, beginIndex + 2 + i * 12), BitConverter.ToSingle (recvData, beginIndex + 6 + i * 12), BitConverter.ToSingle (recvData, beginIndex + 10 + i * 12));
+		}
+		for (int i = numBullet; i < poolSize; ++i) {
+			bullets [i].position = resetPosition;
+			freeBullets.Enqueue (i);
 		}
 	}
 
 	public void Serialize(byte[] serializedData, ref int offset) {
-		Serializer.ToBytes ((short)poolSize, serializedData, ref offset);
+		int begin = offset;
+		short numBullet = 0;
+		Serializer.ToBytes ((short)0, serializedData, ref offset); // the number of bullets
 		for (int i = 0; i < poolSize; ++i) {
-			Serializer.ToBytes (bullets [i].position, serializedData, ref offset);
+			if (bullets [i].position.y > enqueueThresholdY) {
+				Serializer.ToBytes (bullets [i].position, serializedData, ref offset);
+				++numBullet;
+			}
 		}
+		Serializer.ToBytes (numBullet, serializedData, ref begin);
 	}
 }

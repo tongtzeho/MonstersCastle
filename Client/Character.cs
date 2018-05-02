@@ -11,11 +11,12 @@ public class Character : MonoBehaviour {
 	public CharacterController characterController; // assigned in editor
 	public Gun sniper; // assigned in editor
 	public Gun submachine; // assigned in editor
-	public short[] prop = new short[4];
-	public float[] buffTimeLeft = new float[3];
+	public short medicineNum = 0;
+	public short upHpLeft = 0;
 	private Control control;
 	private CharacterSound characterSound;
 	private Vector3 defaultPosition;
+	private BGM gameBGM;
 
 	void Awake() {
 		defaultPosition = characterController.transform.position;
@@ -24,6 +25,7 @@ public class Character : MonoBehaviour {
 	void Start() {
 		control = GetComponent<Control> ();
 		characterSound = GetComponent<CharacterSound> ();
+		gameBGM = GameObject.Find ("Game").GetComponent<BGM> ();
 	}
 
 	public void Serialize(byte[] serializedData, ref int offset) {
@@ -40,9 +42,7 @@ public class Character : MonoBehaviour {
 		Serializer.ToBytes (sniper.GetBulletOwn(), serializedData, ref offset);
 		Serializer.ToBytes (submachine.GetBulletNum(), serializedData, ref offset);
 		Serializer.ToBytes (submachine.GetBulletOwn(), serializedData, ref offset);
-		for (int i = 0; i < 4; ++i) {
-			Serializer.ToBytes (prop[i], serializedData, ref offset);
-		}
+		Serializer.ToBytes (medicineNum, serializedData, ref offset);
 		Serializer.ToBytes ((short)(offset - begin - 2), serializedData, ref begin);
 	}
 
@@ -70,7 +70,7 @@ public class Character : MonoBehaviour {
 		isAlive = isCurrAlive;
 		float prevRebornTimeLeft = rebornTimeLeft;
 		rebornTimeLeft = BitConverter.ToSingle (recvData, beginIndex + 2);
-		if (prevRebornTimeLeft > 3.5f && rebornTimeLeft <= 3.5f) {
+		if (prevRebornTimeLeft > 2.3f && rebornTimeLeft <= 2.3f) {
 			System.GC.Collect ();
 		}
 		short currHp = BitConverter.ToInt16 (recvData, beginIndex + 6);
@@ -84,9 +84,22 @@ public class Character : MonoBehaviour {
 			sniper.SetBulletOwn (BitConverter.ToInt16 (recvData, beginIndex + 28));
 			submachine.SetBulletNum (BitConverter.ToInt16 (recvData, beginIndex + 30));
 			submachine.SetBulletOwn (BitConverter.ToInt16 (recvData, beginIndex + 32));
-			for (int i = 0; i < 4; ++i) {
-				prop [i] = BitConverter.ToInt16 (recvData, beginIndex + 34 + i * 2);
-			}
+			medicineNum = BitConverter.ToInt16 (recvData, beginIndex + 34);
+		}
+		upHpLeft = BitConverter.ToInt16 (recvData, beginIndex + 36);
+		gameBGM.GamePlay (upHpLeft > 0);
+	}
+
+	public void AddMedicine() {
+		++medicineNum;
+	}
+
+	public bool TakeMedicine() {
+		if (medicineNum > 0) {
+			--medicineNum;
+			return true;
+		} else {
+			return false;
 		}
 	}
 }

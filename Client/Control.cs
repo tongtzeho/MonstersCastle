@@ -9,6 +9,7 @@ public class Control : MonoBehaviour {
 	}
 
 	private CharacterController characterController;
+	private Character character;
 	private Transform cameraTransform;
 	private Gun sniper;
 	private Gun submachineGun;
@@ -27,6 +28,7 @@ public class Control : MonoBehaviour {
 
 	void Start () {
 		characterController = GetComponent<CharacterController> ();
+		character = GetComponent<Character> ();
 		cameraTransform = transform.Find ("Camera");
 		GameObject sniperObject = transform.Find ("Camera/sniper").gameObject;
 		sniper = sniperObject.GetComponent<Gun> ();
@@ -80,6 +82,9 @@ public class Control : MonoBehaviour {
 		if (allow) {
 			if (Input.GetButtonDown ("SwitchGun")) {
 				SwitchGun ();
+			}
+			if (Input.GetButtonDown ("TakeMedicine")) {
+				character.TakeMedicine ();
 			}
 			bool pressFire = Input.GetKey (KeyCode.Mouse0);
 			bool pressReload = Input.GetKey (KeyCode.R);

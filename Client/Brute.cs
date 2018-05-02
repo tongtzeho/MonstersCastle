@@ -18,6 +18,7 @@ public class Brute : MonoBehaviour {
 	public AudioSource hurtSound; // assigned in editor
 	public AudioSource dieSound; // assigned in editor
 	private bool setAttackAction = false;
+	private MedicinePool medicinePool;
 
 	void Awake() {
 		FadeImage skull = GameObject.Find ("Skull").GetComponent<FadeImage> ();
@@ -28,6 +29,7 @@ public class Brute : MonoBehaviour {
 		GameObject attackPoint = transform.Find ("AttackParticle").gameObject;
 		attackParticleSystem = attackPoint.GetComponent<ParticleSystem> ();
 		attackSound = attackPoint.GetComponent<AudioSource> ();
+		medicinePool = GameObject.Find ("MedicinePool").GetComponent<MedicinePool> ();
 	}
 
 	public void Serialize(byte[] serializedData, ref int offset) {
@@ -54,6 +56,9 @@ public class Brute : MonoBehaviour {
 			dieAnimationCurrTime = 0;
 		} else {
 			attackCurrTime = 0;
+			if (dieAnimationCurrTime == 0) {
+				medicinePool.Occur (transform.position);
+			}
 			dieAnimationCurrTime += Time.deltaTime;
 			if (dieAnimationCurrTime > dieAnimationTotalTime) {
 				transform.position = new Vector3 (transform.position.x, -5, transform.position.z);
