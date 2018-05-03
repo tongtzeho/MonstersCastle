@@ -25,7 +25,7 @@ class ghost:
 		self.attackAimTime = 0.4
 		self.attackTotalTime = 1.5
 		self.attackId = 0
-		self.attackMax = 15
+		self.attackMax = 10
 		self.generateAttackCD(True)
 		self.dieCurrTime = 0
 		self.dieTotalTime = 1

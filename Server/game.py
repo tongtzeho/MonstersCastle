@@ -23,11 +23,11 @@ class game(threading.Thread): # run as a game monitor client
 		self.brute = brute.brute(self.scene)
 		self.ghosts = {}
 		self.ghostId = 1
-		self.ghostMax = 2000
+		self.ghostMax = 3000
 		self.balls = {}
-		self.submachineBullets = props.props(12)
-		self.sniperBullets = props.props(12)
-		self.medicines = props.props(5)
+		self.submachineBullets = props.props()
+		self.sniperBullets = props.props()
+		self.medicines = props.props()
 		self.gameTime = 0
 		self.gameResult = 0 # 0 for playing, 1 for win, 2 for lose
 		self.level = 0
@@ -188,14 +188,14 @@ class game(threading.Thread): # run as a game monitor client
 						ghostsData = data[offset+4:offset+4+ghostsDataSize*ghostsDataByte]
 						offset += 4+ghostsDataSize*ghostsDataByte
 						submachineBulletsNum = struct.unpack("=h", data[offset:offset+2])[0]
-						submachineBulletsData = data[offset:offset+2+12*submachineBulletsNum]
-						offset += 2+12*submachineBulletsNum
+						submachineBulletsData = data[offset:offset+4+14*submachineBulletsNum]
+						offset += 4+14*submachineBulletsNum
 						sniperBulletsNum = struct.unpack("=h", data[offset:offset+2])[0]
-						sniperBulletsData = data[offset:offset+2+12*sniperBulletsNum]
-						offset += 2+12*sniperBulletsNum
+						sniperBulletsData = data[offset:offset+4+14*sniperBulletsNum]
+						offset += 4+14*sniperBulletsNum
 						medicinesNum = struct.unpack("=h", data[offset:offset+2])[0]
-						medicinesData = data[offset:offset+2+12*medicinesNum]
-						offset += 2+12*medicinesNum
+						medicinesData = data[offset:offset+4+14*medicinesNum]
+						offset += 4+14*medicinesNum
 						self.gameLock.acquire()
 						try:
 							self.character.handle(characterData)

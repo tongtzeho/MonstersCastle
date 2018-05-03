@@ -8,7 +8,7 @@ class brute:
 		self.debug = False
 		self.scene = scene
 		self.level = 0
-		self.maxHp = [400, 800, 1200, 1600, 2000]
+		self.maxHp = [500, 1000, 1500, 2000, 2500]
 		self.atk = [100, 150, 200, 250, 300]
 		self.isAlive = 0
 		self.hp = 0

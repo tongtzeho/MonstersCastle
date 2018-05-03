@@ -4,27 +4,21 @@
 import struct
 
 class props:
-	def __init__(self, num):
+	def __init__(self):
 		self.pool = []
-		self.resetPosition = (0.0, -50.0, 0.0)
-		self.thresholdY = -40.0
-		for i in range(num):
-			self.pool.append(self.resetPosition)
 	
 	def handle(self, data):
+		self.pool = []
 		numProp = struct.unpack("=h", data[:2])[0]
-		offset = 2
+		offset = 4
 		for i in range(numProp):
-			self.pool[i] = struct.unpack("=3f", data[offset:offset+12])
-			offset += 12
-		for i in range(numProp, len(self.pool)):
-			self.pool[i] = self.resetPosition
+			self.pool.append(struct.unpack("=h3f", data[offset:offset+14]))
+			offset += 14
 	
 	def serialize(self):
 		result = ""
 		numProp = 0
 		for prop in self.pool:
-			if prop[1] > self.thresholdY:
-				numProp += 1
-				result += struct.pack("=3f", prop[0], prop[1], prop[2])
-		return struct.pack("=h", numProp) + result
+			numProp += 1
+			result += struct.pack("=h3f", prop[0], prop[1], prop[2], prop[3])
+		return struct.pack("=hh", numProp, 14) + result
