@@ -17,25 +17,22 @@ public class Game : MonoBehaviour {
 
 	public Character character; // assigned in editor
 	public Brute brute; // assigned in editor
-	public GhostPool ghostPool; // assigned in editor
-	private BulletPool submachineBulletPool;
-	private BulletPool sniperBulletPool;
-	public MedicinePool medicinePool; // assigned in editor
-	public BallPool ballPool; // assigned in editor
+	public ObjectPool ghostPool; // assigned in editor
+	private ObjectPool submachineBulletPool;
+	private ObjectPool sniperBulletPool;
+	public ObjectPool medicinePool; // assigned in editor
+	public ObjectPool ballPool; // assigned in editor
 	public Control control; // assigned in editor
 	public GateUI gateUI; // assigned in editor
 	public GameUIPanel gameUIPanel; // assigned in editor
 	public BGM gameBGM; // assigned in editor
 	public AsyncClient client; // assigned in editor
 
-	private HashSet<int> usedGhostServerId = new HashSet<int>();
-	private HashSet<int> usedBallServerId = new HashSet<int>();
-
 	private byte[] serializedData = new byte[1024];
 
 	void Awake() {
-		BulletPool[] bulletPools = GameObject.Find ("BulletPool").GetComponents<BulletPool> ();
-		if (bulletPools [0].prefabName == "SniperBullet") {
+		ObjectPool[] bulletPools = GameObject.Find ("BulletPool").GetComponents<ObjectPool> ();
+		if (bulletPools [0].prefabName == "Prefabs/SniperBullet") {
 			sniperBulletPool = bulletPools [0];
 			submachineBulletPool = bulletPools [1];
 		} else {
@@ -112,60 +109,43 @@ public class Game : MonoBehaviour {
 				int offset = 8;
 
 				short characterDataLen = BitConverter.ToInt16 (recvData, offset);
-				character.UpdateFromServer (gameState == GameState.Init, recvData, offset + 2, (int)characterDataLen);
+				character.Synchronize (gameState == GameState.Init, recvData, offset + 2);
 				offset += 2 + characterDataLen;
 
 				short bruteDataLen = BitConverter.ToInt16 (recvData, offset);
-				brute.UpdateFromServer (gameState == GameState.Init, recvData, offset + 2, (int)bruteDataLen);
+				brute.Synchronize (gameState == GameState.Init, recvData, offset + 2);
 				offset += 2 + bruteDataLen;
 
-				short ghostDataLen = BitConverter.ToInt16 (recvData, offset);
+				short ghostDataSize = BitConverter.ToInt16 (recvData, offset);
 				short ghostDataByte = BitConverter.ToInt16 (recvData, offset + 2);
-				offset += 4;
-				usedGhostServerId.Clear ();
-				for (int j = 0; j < ghostDataLen; ++j) {
-					short ghostServerId = BitConverter.ToInt16 (recvData, offset);
-					short ghostHp = BitConverter.ToInt16 (recvData, offset + 2);
-					Ghost ghost = ghostPool.GetGhostFromServerId ((int)ghostServerId, ghostHp);
-					if (ghost != null) {
-						ghost.UpdateFromServer (recvData, offset, ghostDataByte);
-					}
-					offset += ghostDataByte;
-					usedGhostServerId.Add (ghostServerId);
-				}
-				ghostPool.RecycleUnusedGhosts (usedGhostServerId);
+				ghostPool.Synchronize (recvData, offset);
+				offset += 4 + ghostDataSize * ghostDataByte;
 
-				short submachineBulletsNum = BitConverter.ToInt16 (recvData, offset);
+				short submachineBulletDataSize = BitConverter.ToInt16 (recvData, offset);
+				short submachineBulletDataByte = BitConverter.ToInt16 (recvData, offset + 2);
 				if (gameState == GameState.Init) {
-					submachineBulletPool.UpdateFromServer (recvData, offset, 2 + 12 * submachineBulletsNum);
+					submachineBulletPool.Synchronize (recvData, offset);
 				}
-				offset += 2 + 12 * submachineBulletsNum;
+				offset += 4 + submachineBulletDataSize * submachineBulletDataByte;
 
-				short sniperBulletsNum = BitConverter.ToInt16 (recvData, offset);
+				short sniperBulletDataSize = BitConverter.ToInt16 (recvData, offset);
+				short sniperBulletDataByte = BitConverter.ToInt16 (recvData, offset + 2);
 				if (gameState == GameState.Init) {
-					sniperBulletPool.UpdateFromServer (recvData, offset, 2 + 12 * sniperBulletsNum);
+					sniperBulletPool.Synchronize (recvData, offset);
 				}
-				offset += 2 + 12 * sniperBulletsNum;
+				offset += 4 + sniperBulletDataSize * sniperBulletDataByte;
 
-				short medicinesNum = BitConverter.ToInt16 (recvData, offset);
+				short medicineDataSize = BitConverter.ToInt16 (recvData, offset);
+				short medicineDataByte = BitConverter.ToInt16 (recvData, offset + 2);
 				if (gameState == GameState.Init) {
-					medicinePool.UpdateFromServer (recvData, offset, 2 + 12 * medicinesNum);
+					medicinePool.Synchronize (recvData, offset);
 				}
-				offset += 2 + 12 * medicinesNum;
+				offset += 4 + medicineDataSize * medicineDataByte;
 
-				short ballDataLen = BitConverter.ToInt16 (recvData, offset);
+				short ballDataSize = BitConverter.ToInt16 (recvData, offset);
 				short ballDataByte = BitConverter.ToInt16 (recvData, offset + 2);
-				offset += 4;
-				usedBallServerId.Clear ();
-				for (int j = 0; j < ballDataLen; ++j) {
-					short ballServerId = BitConverter.ToInt16 (recvData, offset);
-					if (!ballPool.Contains ((int)ballServerId)) {
-						ballPool.Create ((int)ballServerId, recvData, offset + 2);
-					}
-					offset += ballDataByte;
-					usedBallServerId.Add (ballServerId);
-				}
-				ballPool.RecycleUnusedBalls (usedBallServerId);
+				ballPool.Synchronize (recvData, offset);
+				offset += 4 + ballDataSize * ballDataByte;
 
 				gameState = GameState.Run;
 			}

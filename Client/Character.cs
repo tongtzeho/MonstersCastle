@@ -46,7 +46,7 @@ public class Character : MonoBehaviour {
 		Serializer.ToBytes ((short)(offset - begin - 2), serializedData, ref begin);
 	}
 
-	public void UpdateFromServer(bool gameInitializing, byte[] recvData, int beginIndex, int length) {
+	public void Synchronize(bool gameInitializing, byte[] recvData, int beginIndex) {
 		if (control == null) {
 			control = GetComponent<Control> ();
 		}

@@ -3,17 +3,17 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Ghost : MonoBehaviour {
+public class Ghost : IPoolObject {
 
 	public short serverId;
 	public MonsterHP monster;
 	public short action;
 	private GhostAnimator ghostAnimator;
 	private bool isDying = false;
-	private BulletPool submachineBulletPool;
-	private BulletPool sniperBulletPool;
-	private Vector3 offsetY = new Vector3(0, 50, 0);
+	private ObjectPool submachineBulletPool;
+	private ObjectPool sniperBulletPool;
 	private float bulletProbability = 0.125f;
+	private Vector3 offsetY = new Vector3(0, 50, 0);
 
 	void Awake() {
 		AudioSource hurtSound = GetComponent<AudioSource> ();
@@ -23,36 +23,32 @@ public class Ghost : MonoBehaviour {
 
 	void Start() {
 		ghostAnimator = GetComponent<GhostAnimator> ();
-		BulletPool[] bulletPools = GameObject.Find ("BulletPool").GetComponents<BulletPool> ();
-		if (bulletPools [0].prefabName == "SniperBullet") {
-			sniperBulletPool = bulletPools [0];
-			submachineBulletPool = bulletPools [1];
-		} else {
-			sniperBulletPool = bulletPools [1];
-			submachineBulletPool = bulletPools [0];
-		}
+		ObjectPool[] bulletPools = GameObject.Find ("BulletPool").GetComponents<ObjectPool> ();
+		sniperBulletPool = bulletPools [0];
+		submachineBulletPool = bulletPools [1];
 	}
 
-	public void Serialize(byte[] serializedData, ref int offset) {
-		Serializer.ToBytes (serverId, serializedData, ref offset);
-		Serializer.ToBytes (monster.hp, serializedData, ref offset);
-	}
-
-	public void Enable(short sid, short hp) {
-		serverId = sid;
-		monster.hp = hp;
+	public override void Enable(byte[] recvData, int beginIndex) {
+		base.Enable (recvData, beginIndex);
+		serverId = BitConverter.ToInt16 (recvData, beginIndex);
+		monster.hp = BitConverter.ToInt16 (recvData, beginIndex + 2);
 		isDying = false;
 		action = 2;
 	}
 
-	public void Disable() {
+	public override void Disable() {
+		base.Disable ();
 		monster.hp = 0;
 		isDying = false;
 		transform.position = new Vector3 (0, -50, -50);
 		action = 2;
 	}
 
-	public void UpdateFromServer (byte[] recvData, int beginIndex, int length) {
+	public override void Serialize(byte[] serializedData, ref int offset) {
+		Serializer.ToBytes (monster.hp, serializedData, ref offset);
+	}
+
+	public override void Synchronize (byte[] recvData, int beginIndex) {
 		monster.maxHp = BitConverter.ToInt16 (recvData, beginIndex + 4);
 		action = BitConverter.ToInt16 (recvData, beginIndex + 22);
 		if (action == 5) {
@@ -63,9 +59,9 @@ public class Ghost : MonoBehaviour {
 				float rm = UnityEngine.Random.value;
 				if (rm < bulletProbability + bulletProbability) {
 					if (rm < bulletProbability) {
-						submachineBulletPool.Occur (transform.position.y < -40.0f ? transform.position + offsetY : transform.position);
+						submachineBulletPool.Create (serverId, recvData, beginIndex + 4);
 					} else {
-						sniperBulletPool.Occur (transform.position.y < -40.0f ? transform.position + offsetY : transform.position);
+						sniperBulletPool.Create (serverId, recvData, beginIndex + 4);
 					}
 				}
 			}
@@ -80,5 +76,9 @@ public class Ghost : MonoBehaviour {
 			transform.position = new Vector3 (BitConverter.ToSingle (recvData, beginIndex + 6), BitConverter.ToSingle (recvData, beginIndex + 10), BitConverter.ToSingle (recvData, beginIndex + 14)) - offsetY;
 		}
 		ghostAnimator.SetState (action);
+	}
+
+	public override bool Step() {
+		return true;
 	}
 }

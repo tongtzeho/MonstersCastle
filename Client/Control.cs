@@ -21,7 +21,7 @@ public class Control : MonoBehaviour {
 	private const float jumpVelocity = 4.5f;
 	private Gun activeGun;
 	private Gun inactiveGun;
-	private Sniper sniperSight;
+	private Sight sniperSight;
 	private Recoil recoil = new Recoil ();
 	private CharacterSound characterSound;
 	private bool allow = false; // can control
@@ -32,7 +32,7 @@ public class Control : MonoBehaviour {
 		cameraTransform = transform.Find ("Camera");
 		GameObject sniperObject = transform.Find ("Camera/sniper").gameObject;
 		sniper = sniperObject.GetComponent<Gun> ();
-		sniperSight = sniperObject.GetComponent<Sniper> ();
+		sniperSight = sniperObject.GetComponent<Sight> ();
 		GameObject submachineObject = transform.Find ("Camera/submachinegun").gameObject;
 		submachineGun = submachineObject.GetComponent<Gun> ();
 		activeGun = sniper;
@@ -50,7 +50,7 @@ public class Control : MonoBehaviour {
 
 	public void SetDeadCamera() {
 		cameraTransform.localRotation = Quaternion.Euler (40, 0, 0);
-		sniperSight.SetADS (false);
+		sniperSight.SetSight (false);
 	}
 
 	public void Reset() {
@@ -58,7 +58,7 @@ public class Control : MonoBehaviour {
 			SwitchGun ();
 		}
 		cameraTransform.localRotation = Quaternion.Euler (0, 0, 0);
-		sniperSight.SetADS (false);
+		sniperSight.SetSight (false);
 		recoil.Reset ();
 	}
 
@@ -94,7 +94,7 @@ public class Control : MonoBehaviour {
 			float recover = recoil.Recover (Time.deltaTime);
 			float rotationX = Input.GetAxis ("Mouse X");
 			float rotationY = Input.GetAxis ("Mouse Y");
-			if (sniperSight.GetADS()) {
+			if (sniperSight.GetSight()) {
 				rotationX *= 0.45f;
 				rotationY *= 0.45f;
 			}
@@ -153,13 +153,13 @@ public class Control : MonoBehaviour {
 			}
 			activeGun.GetAnimator ().SetState (characterState, gunState);
 			characterSound.SetWalkingSoundState (characterState);
-			sniperSight.SetADS (activeGun == sniper && characterState != CharacterState.Run && (gunState == Gun.GunState.Fire || gunState == Gun.GunState.Idle) && Input.GetKey (KeyCode.Mouse1));
+			sniperSight.SetSight (activeGun == sniper && characterState != CharacterState.Run && (gunState == Gun.GunState.Fire || gunState == Gun.GunState.Idle) && Input.GetKey (KeyCode.Mouse1));
 			Cursor.visible = false;
 		} else {
 			inactiveGun.GetAnimator ().SetState (CharacterState.Idle, Gun.GunState.Hide);
 			activeGun.GetAnimator ().SetState (CharacterState.Idle, Gun.GunState.Hide);
 			characterSound.SetWalkingSoundState (CharacterState.Idle);
-			sniperSight.SetADS (false);
+			sniperSight.SetSight (false);
 			recoil.Reset ();
 			Cursor.visible = true;
 		}

@@ -1,35 +1,35 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Ball {
+public class Ball : IPoolObject {
 
 	private Vector3 resetPos = new Vector3 (0, -10, 0);
 	private Vector3 velocity = new Vector3();
-	private bool isAlive = false;
-	private Transform transform = null;
 
-	public Ball(Transform transform) {
-		this.transform = transform;
-		this.transform.position = resetPos;
+	public override void Enable(byte[] recvData, int beginIndex) {
+		base.Enable (recvData, beginIndex);
+		transform.position = new Vector3 (BitConverter.ToSingle (recvData, beginIndex + 2), BitConverter.ToSingle (recvData, beginIndex + 6), BitConverter.ToSingle (recvData, beginIndex + 10));
+		velocity = new Vector3 (BitConverter.ToSingle (recvData, beginIndex + 14), BitConverter.ToSingle (recvData, beginIndex + 18), BitConverter.ToSingle (recvData, beginIndex + 22));
 	}
 
-	public bool isEnabled() {
-		return isAlive;
-	}
-
-	public void Enable(Vector3 position, Vector3 velocity) {
-		isAlive = true;
-		transform.position = position;
-		this.velocity = velocity;
-	}
-
-	public void Disable() {
-		isAlive = false;
+	public override void Disable() {
+		base.Disable ();
 		transform.position = resetPos;
+		velocity = Vector3.zero;
 	}
 
-	public void Move () {
+	public override void Serialize (byte[] serializedData, ref int offset) {
+		return; // no need
+	}
+
+	public override void Synchronize (byte[] recvData, int beginIndex) {
+		return; // no need
+	}
+
+	public override bool Step() {
 		transform.position += velocity * Time.deltaTime;
+		return true;
 	}
 }

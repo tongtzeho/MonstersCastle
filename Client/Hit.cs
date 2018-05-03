@@ -24,22 +24,16 @@ public class Hit : MonoBehaviour {
 		Collider bruteHead = bruteObject.GetComponentInChildren<SphereCollider> ();
 		headSet.Add (bruteHead);
 		Transform ghostPool = GameObject.Find ("GhostPool").transform;
-		int ghostId = 0;
-		while (true) {
-			string ghostName = "Ghost" + ghostId.ToString ();
-			Transform ghost = ghostPool.Find (ghostName);
-			if (ghost == null) {
-				break;
-			} else {
-				++ghostId;
-				MonsterHP monster = ghost.gameObject.GetComponent<Ghost> ().monster;
-				Collider[] ghostCollider = ghost.gameObject.GetComponents<Collider> ();
-				for (int i = 0; i < ghostCollider.Length; ++i) {
-					colliderTable.Add (ghostCollider [i], monster);
-				}
-				Collider ghostHead = ghost.gameObject.GetComponent<SphereCollider> ();
-				headSet.Add (ghostHead);
+		int ghostPoolSize = ghostPool.gameObject.GetComponent<ObjectPool> ().poolSize;
+		for (int i = 0; i < ghostPoolSize; ++i) {
+			Transform ghost = ghostPool.GetChild (i);
+			MonsterHP monster = ghost.gameObject.GetComponent<Ghost> ().monster;
+			Collider[] ghostCollider = ghost.gameObject.GetComponents<Collider> ();
+			for (int j = 0; j < ghostCollider.Length; ++j) {
+				colliderTable.Add (ghostCollider [j], monster);
 			}
+			Collider ghostHead = ghost.gameObject.GetComponent<SphereCollider> ();
+			headSet.Add (ghostHead);
 		}
 	}
 

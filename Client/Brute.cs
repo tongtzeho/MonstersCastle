@@ -18,7 +18,7 @@ public class Brute : MonoBehaviour {
 	public AudioSource hurtSound; // assigned in editor
 	public AudioSource dieSound; // assigned in editor
 	private bool setAttackAction = false;
-	private MedicinePool medicinePool;
+	private ObjectPool medicinePool;
 
 	void Awake() {
 		FadeImage skull = GameObject.Find ("Skull").GetComponent<FadeImage> ();
@@ -29,7 +29,7 @@ public class Brute : MonoBehaviour {
 		GameObject attackPoint = transform.Find ("AttackParticle").gameObject;
 		attackParticleSystem = attackPoint.GetComponent<ParticleSystem> ();
 		attackSound = attackPoint.GetComponent<AudioSource> ();
-		medicinePool = GameObject.Find ("MedicinePool").GetComponent<MedicinePool> ();
+		medicinePool = GameObject.Find ("MedicinePool").GetComponent<ObjectPool> ();
 	}
 
 	public void Serialize(byte[] serializedData, ref int offset) {
@@ -41,7 +41,7 @@ public class Brute : MonoBehaviour {
 		Serializer.ToBytes ((short)(offset - begin - 2), serializedData, ref begin);
 	}
 
-	public void UpdateFromServer (bool gameInitializing, byte[] recvData, int beginIndex, int length) {
+	public void Synchronize (bool gameInitializing, byte[] recvData, int beginIndex) {
 		short isCurrAlive = BitConverter.ToInt16 (recvData, beginIndex);
 		level = BitConverter.ToInt16 (recvData, beginIndex + 2);
 		bool isReborn = (isCurrAlive == 1 && isAlive == 0 && !gameInitializing);
@@ -56,8 +56,8 @@ public class Brute : MonoBehaviour {
 			dieAnimationCurrTime = 0;
 		} else {
 			attackCurrTime = 0;
-			if (dieAnimationCurrTime == 0) {
-				medicinePool.Occur (transform.position);
+			if (dieAnimationCurrTime == 0 && level > 0) {
+				medicinePool.Create (level, recvData, beginIndex + 6);
 			}
 			dieAnimationCurrTime += Time.deltaTime;
 			if (dieAnimationCurrTime > dieAnimationTotalTime) {
