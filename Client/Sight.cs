@@ -1,8 +1,8 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Sniper : MonoBehaviour {
+public class Sight : MonoBehaviour {
 
 	private SkinnedMeshRenderer meshRenderer;
 	private Camera characteCamera;
@@ -10,8 +10,8 @@ public class Sniper : MonoBehaviour {
 	public RectTransform sniperSight; // assigned in editor
 	private const float sniperSightDefaultHeight = 1080.0f;
 	private const float defaultFOV = 80.0f;
-	private const float adsFOV = 24.0f;
-	private bool ads = false;
+	private const float sightFOV = 24.0f;
+	private bool useSight = false;
 	private Vector3 disablePosition = new Vector3(0, 10000, 0);
 
 	void Start () {
@@ -21,18 +21,18 @@ public class Sniper : MonoBehaviour {
 		sniperSight.localScale = new Vector3 (scale, scale, 1);
 	}
 
-	public bool GetADS() {
-		return ads;
+	public bool GetSight() {
+		return useSight;
 	}
 
-	public void SetADS(bool a) {
-		ads = a;
-		if (!ads) {
+	public void SetSight(bool sight) {
+		useSight = sight;
+		if (!useSight) {
 			characteCamera.fieldOfView = defaultFOV;
 			defaultSight.localPosition = Vector3.zero;
 			sniperSight.localPosition = disablePosition;
 		} else {
-			characteCamera.fieldOfView = adsFOV;
+			characteCamera.fieldOfView = sightFOV;
 			meshRenderer.enabled = false;
 			sniperSight.localPosition = Vector3.zero;
 			defaultSight.localPosition = disablePosition;
