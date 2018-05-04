@@ -21,9 +21,12 @@ class game(threading.Thread): # run as a game monitor client
 		self.gameLock.acquire()
 		self.character = character.character()
 		self.brute = brute.brute(self.scene)
+		self.bruteFirstBornTime = 12
+		self.bruteBornInterval = 18
 		self.ghosts = {}
 		self.ghostId = 1
 		self.ghostMax = 3000
+		self.ghostBornInterval = 2.6
 		self.balls = {}
 		self.submachineBullets = props.props()
 		self.sniperBullets = props.props()
@@ -73,13 +76,13 @@ class game(threading.Thread): # run as a game monitor client
 				self.gameTime += deltaTime
 				damageByBalls = self.updateBalls(deltaTime)
 				damageByBrute = self.brute.update(deltaTime, self.character)
-				if (self.level == 0 and self.gameTime >= 5) or (self.level >= 1 and self.level <= self.maxLevel - 1 and self.isBruteDead(10, deltaTime)):
+				if (self.level == 0 and self.gameTime >= self.bruteFirstBornTime) or (self.level >= 1 and self.level <= self.maxLevel - 1 and self.isBruteDead(self.bruteBornInterval, deltaTime)):
 					self.brute.reborn()
 					self.level += 1
 				elif self.level == self.maxLevel and self.brute.isAlive == 0:
 					self.level = self.maxLevel+1 # ghost will not born
 				if self.gateHp <= 0:
-					self.gameResult = 1 # TODO: change to -1
+					self.gameResult = 2
 				elif self.level == self.maxLevel+1 and len(self.ghosts) == 0:
 					self.gameResult = 1
 				damageByGhosts = self.updateGhosts(deltaTime)
@@ -112,7 +115,7 @@ class game(threading.Thread): # run as a game monitor client
 		return damage
 	
 	def updateGhosts(self, deltaTime):
-		if self.gameTime >= 2.3*self.ghostId and self.gameTime-deltaTime < 2.3*self.ghostId and self.ghostId <= self.ghostMax and self.level <= self.maxLevel:
+		if self.gameTime >= self.ghostBornInterval*self.ghostId and self.gameTime-deltaTime < self.ghostBornInterval*self.ghostId and self.ghostId <= self.ghostMax and self.level <= self.maxLevel:
 			self.ghosts[self.ghostId] = ghost.ghost(self.ghostId, self.scene)
 			self.ghostId += 1
 		damage = [0, 0]
@@ -175,45 +178,44 @@ class game(threading.Thread): # run as a game monitor client
 		try:
 			gameResult, command = struct.unpack("=hh", data[:4])
 			if gameResult == self.gameResult:
-				if gameResult == 0: # game is playing
-					if command == 0:
-						offset = 4
-						characterDataLen = struct.unpack("=h", data[offset:offset+2])[0]
-						characterData = data[offset+2:offset+2+characterDataLen]
-						offset += 2+characterDataLen
-						bruteDataLen = struct.unpack("=h", data[offset:offset+2])[0]
-						bruteData = data[offset+2:offset+2+bruteDataLen]
-						offset += 2+bruteDataLen
-						ghostsDataSize, ghostsDataByte = struct.unpack("=hh", data[offset:offset+4])
-						ghostsData = data[offset+4:offset+4+ghostsDataSize*ghostsDataByte]
-						offset += 4+ghostsDataSize*ghostsDataByte
-						submachineBulletsNum = struct.unpack("=h", data[offset:offset+2])[0]
-						submachineBulletsData = data[offset:offset+4+14*submachineBulletsNum]
-						offset += 4+14*submachineBulletsNum
-						sniperBulletsNum = struct.unpack("=h", data[offset:offset+2])[0]
-						sniperBulletsData = data[offset:offset+4+14*sniperBulletsNum]
-						offset += 4+14*sniperBulletsNum
-						medicinesNum = struct.unpack("=h", data[offset:offset+2])[0]
-						medicinesData = data[offset:offset+4+14*medicinesNum]
-						offset += 4+14*medicinesNum
-						self.gameLock.acquire()
-						try:
-							self.character.handle(characterData)
-							self.brute.handle(bruteData)
-							offset = 0
-							for i in range(ghostsDataSize):
-								id = struct.unpack("=h", ghostsData[offset:offset+2])[0]
-								if id in self.ghosts:
-									self.ghosts[id].handle(ghostsData[offset:offset+ghostsDataByte])
-								offset += ghostsDataByte
-							self.submachineBullets.handle(submachineBulletsData)
-							self.sniperBullets.handle(sniperBulletsData)
-							self.medicines.handle(medicinesData)
-						except:
-							print ("game.py handle error")
-							pass
-						self.gameLock.release()
-				else: # win or lose
+				if gameResult == 0 and command == 0: # game is playing
+					offset = 4
+					characterDataLen = struct.unpack("=h", data[offset:offset+2])[0]
+					characterData = data[offset+2:offset+2+characterDataLen]
+					offset += 2+characterDataLen
+					bruteDataLen = struct.unpack("=h", data[offset:offset+2])[0]
+					bruteData = data[offset+2:offset+2+bruteDataLen]
+					offset += 2+bruteDataLen
+					ghostsDataSize, ghostsDataByte = struct.unpack("=hh", data[offset:offset+4])
+					ghostsData = data[offset+4:offset+4+ghostsDataSize*ghostsDataByte]
+					offset += 4+ghostsDataSize*ghostsDataByte
+					submachineBulletsNum = struct.unpack("=h", data[offset:offset+2])[0]
+					submachineBulletsData = data[offset:offset+4+14*submachineBulletsNum]
+					offset += 4+14*submachineBulletsNum
+					sniperBulletsNum = struct.unpack("=h", data[offset:offset+2])[0]
+					sniperBulletsData = data[offset:offset+4+14*sniperBulletsNum]
+					offset += 4+14*sniperBulletsNum
+					medicinesNum = struct.unpack("=h", data[offset:offset+2])[0]
+					medicinesData = data[offset:offset+4+14*medicinesNum]
+					offset += 4+14*medicinesNum
+					self.gameLock.acquire()
+					try:
+						self.character.handle(characterData)
+						self.brute.handle(bruteData)
+						offset = 0
+						for i in range(ghostsDataSize):
+							id = struct.unpack("=h", ghostsData[offset:offset+2])[0]
+							if id in self.ghosts:
+								self.ghosts[id].handle(ghostsData[offset:offset+ghostsDataByte])
+							offset += ghostsDataByte
+						self.submachineBullets.handle(submachineBulletsData)
+						self.sniperBullets.handle(sniperBulletsData)
+						self.medicines.handle(medicinesData)
+					except:
+						print ("game.py handle error")
+						pass
+					self.gameLock.release()
+				else: # restart or logout in 0/1/2
 					ret = command
 		except:
 			print ("unpack data error")

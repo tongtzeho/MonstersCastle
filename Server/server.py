@@ -79,10 +79,7 @@ def register(username, password):
 def handleSignUp(sock, data):
 	username, password = fetchUsernamePassword(data)
 	if register(username, password):
-		login(sock, username, password) # login after register
-		if not username in PLAYER_GAME:
-			createNewGame(username)
-		sendMsgToSock(sock, "$si0")
+		sendMsgToSock(sock, "$su0")
 	else:
 		sendMsgToSock(sock, "$su1")
 	

@@ -8,9 +8,9 @@ class character:
 		self.debug = False
 		self.reborn()
 		self.sniperBulletNum = 5
-		self.sniperBulletOwn = 25
+		self.sniperBulletOwn = 20
 		self.submachineBulletNum = 30
-		self.submachineBulletOwn = 150
+		self.submachineBulletOwn = 120
 		self.medicineNum = 0
 		self.upHpLeft = 0
 		self.buffTimeLeft = 0.0
