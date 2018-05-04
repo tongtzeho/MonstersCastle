@@ -13,6 +13,7 @@ public class Bullet : IPoolObject {
 	private short currQuery = 0;
 	private float distSqrThreshold = 1;
 	private Vector3 resetPos = new Vector3(0, -50, 0);
+	private float minY = -0.45f; // avoid sinking under water
 
 	void Start () {
 		character = GameObject.Find ("Character").transform;
@@ -28,7 +29,8 @@ public class Bullet : IPoolObject {
 
 	public override void Enable(byte[] recvData, int beginIndex) {
 		base.Enable (recvData, beginIndex);
-		transform.position = new Vector3 (BitConverter.ToSingle (recvData, beginIndex + 2), BitConverter.ToSingle (recvData, beginIndex + 6), BitConverter.ToSingle (recvData, beginIndex + 10));
+		float y = Mathf.Max (BitConverter.ToSingle (recvData, beginIndex + 6), minY);
+		transform.position = new Vector3 (BitConverter.ToSingle (recvData, beginIndex + 2), y, BitConverter.ToSingle (recvData, beginIndex + 10));
 	}
 
 	public override void Disable() {

@@ -49,4 +49,12 @@ public class BGM : MonoBehaviour {
 		victoryBGM.Play ();
 		defeatBGM.Stop ();
 	}
+
+	public void Defeat() {
+		gamePlayState = 0;
+		gameBGM.Stop ();
+		hpUpBGM.Stop ();
+		victoryBGM.Stop ();
+		defeatBGM.Play ();
+	}
 }

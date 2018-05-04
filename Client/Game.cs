@@ -100,10 +100,15 @@ public class Game : MonoBehaviour {
 			//short level = BitConverter.ToInt16 (recvData, 2);
 			short gateHp = BitConverter.ToInt16 (recvData, 4);
 			short gateMaxHp = BitConverter.ToInt16 (recvData, 6);
-			if (gameResult == 1) {
+			if (gameResult != 0) {
 				Reset ();
-				gameUIPanel.Victory ();
-				gameBGM.Victory ();
+				if (gameResult == 1) {
+					gameUIPanel.Victory ();
+					gameBGM.Victory ();
+				} else {
+					gameUIPanel.Defeat ();
+					gameBGM.Defeat ();
+				}
 			} else {
 				gateUI.SetGateCurrentState (gateHp, gateMaxHp);
 				int offset = 8;
@@ -155,6 +160,10 @@ public class Game : MonoBehaviour {
 	// only called by NetworkThread.AsyncReceive
 	public void AppendGameStatusFromServer(int index) {
 		recvMessageIndex.Enqueue (index);
+	}
+
+	public void RaiseSocketException() {
+		gameUIPanel.RaiseSocketException ();
 	}
 
 	public byte[] GetCurrentGameStatus(out int dataSize) {

@@ -12,7 +12,7 @@ public class Ghost : IPoolObject {
 	private bool isDying = false;
 	private ObjectPool submachineBulletPool;
 	private ObjectPool sniperBulletPool;
-	private float bulletProbability = 0.125f;
+	private float bulletProbability = 0.2f;
 	private Vector3 offsetY = new Vector3(0, 50, 0);
 
 	void Awake() {

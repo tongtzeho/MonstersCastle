@@ -9,7 +9,7 @@ public class Brute : MonoBehaviour {
 	public MonsterHP monster;
 	public short action = 0;
 	public Animator animator; // assigned in editor
-	private float dieAnimationTotalTime = 1.4f;
+	private float dieAnimationTotalTime = 1.3f;
 	private float dieAnimationCurrTime = 0;
 	private float attackParticlePlayTime = 0.48f;
 	private float attackCurrTime = 0;
@@ -58,10 +58,7 @@ public class Brute : MonoBehaviour {
 			attackCurrTime = 0;
 			if (dieAnimationCurrTime == 0 && level > 0) {
 				medicinePool.Create (level, recvData, beginIndex + 6);
-			}
-			dieAnimationCurrTime += Time.deltaTime;
-			if (dieAnimationCurrTime > dieAnimationTotalTime) {
-				transform.position = new Vector3 (transform.position.x, -5, transform.position.z);
+				dieAnimationCurrTime = 0.001f;
 			}
 		}
 		action = BitConverter.ToInt16 (recvData, beginIndex + 24);
@@ -95,5 +92,11 @@ public class Brute : MonoBehaviour {
 
 	void Update() {
 		setAttackAction = false;
+		if (isAlive == 0 && dieAnimationCurrTime != 0) {
+			dieAnimationCurrTime += Time.deltaTime;
+			if (dieAnimationCurrTime > dieAnimationTotalTime) {
+				transform.position = new Vector3 (transform.position.x, -5, transform.position.z);
+			}
+		}
 	}
 }

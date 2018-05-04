@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -7,8 +7,7 @@ public class FadeImage : MonoBehaviour {
 	private UnityEngine.UI.RawImage image;
 
 	// assigned in editor
-	public Color zeroAlpha;
-	public Color fullAlpha;
+	public float fullAlpha;
 	public float fadeAlphaPerSecond;
 
 	void Start () {
@@ -16,17 +15,14 @@ public class FadeImage : MonoBehaviour {
 	}
 
 	void Update () {
-		if (image.color.a != 0.0f) {
-			float alpha = image.color.a - fadeAlphaPerSecond * Time.deltaTime;
-			if (alpha < 0.0f) {
-				image.color = zeroAlpha;
-			} else {
-				image.color = new Color (1.0f, 1.0f, 1.0f, alpha);
-			}
+		if (image.color.a != 0) {
+			Color c = image.color;
+			c.a = Mathf.Max (0, c.a - fadeAlphaPerSecond * Time.deltaTime);
+			image.color = c;
 		}
 	}
 
 	public void Activate() {
-		image.color = fullAlpha;
+		image.color = new Color (1.0f, 1.0f, 1.0f, fullAlpha);
 	}
 }

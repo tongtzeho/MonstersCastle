@@ -26,6 +26,11 @@ public class Control : MonoBehaviour {
 	private CharacterSound characterSound;
 	private bool allow = false; // can control
 
+	// related to pause
+	private Game game;
+	private GameUIPanel gameUIPanel;
+	private bool isPause = false;
+
 	void Start () {
 		characterController = GetComponent<CharacterController> ();
 		character = GetComponent<Character> ();
@@ -38,6 +43,8 @@ public class Control : MonoBehaviour {
 		activeGun = sniper;
 		inactiveGun = submachineGun;
 		characterSound = GetComponent<CharacterSound> ();
+		game = GameObject.Find ("Game").GetComponent<Game> ();
+		gameUIPanel = GameObject.Find ("GameUI").GetComponent<GameUIPanel> ();
 	}
 
 	public void Disallow() {
@@ -60,6 +67,7 @@ public class Control : MonoBehaviour {
 		cameraTransform.localRotation = Quaternion.Euler (0, 0, 0);
 		sniperSight.SetSight (false);
 		recoil.Reset ();
+		isPause = false;
 	}
 
 	public void SwitchGun() {
@@ -80,20 +88,30 @@ public class Control : MonoBehaviour {
 
 	void Update() {
 		if (allow) {
-			if (Input.GetButtonDown ("SwitchGun")) {
+			bool clickSwitchGun = !isPause && Input.GetButtonDown ("SwitchGun");
+			bool clickTakeMedicine = !isPause && Input.GetButtonDown ("TakeMedicine");
+			bool pressFire = !isPause && Input.GetKey (KeyCode.Mouse0);
+			bool pressReload = !isPause && Input.GetKey (KeyCode.R);
+			float rotationX = isPause ? 0 : Input.GetAxis ("Mouse X");
+			float rotationY = isPause ? 0 : Input.GetAxis ("Mouse Y");
+			bool pressJump = !isPause && Input.GetKey (KeyCode.Space);
+			bool pressRun = !isPause && Input.GetKey (KeyCode.LeftShift);
+			bool pressW = !isPause && Input.GetKey (KeyCode.W);
+			bool pressS = !isPause && Input.GetKey (KeyCode.S);
+			bool pressA = !isPause && Input.GetKey (KeyCode.A);
+			bool pressD = !isPause && Input.GetKey (KeyCode.D);
+			bool pressSight = !isPause && Input.GetKey (KeyCode.Mouse1);
+
+			if (clickSwitchGun) {
 				SwitchGun ();
 			}
-			if (Input.GetButtonDown ("TakeMedicine")) {
+			if (clickTakeMedicine) {
 				character.TakeMedicine ();
 			}
-			bool pressFire = Input.GetKey (KeyCode.Mouse0);
-			bool pressReload = Input.GetKey (KeyCode.R);
 			float recoilResult = 0.0f;
 			Gun.GunState gunState = activeGun.Action (pressFire, pressReload, out recoilResult);
 			recoil.AddRecoil (recoilResult);
 			float recover = recoil.Recover (Time.deltaTime);
-			float rotationX = Input.GetAxis ("Mouse X");
-			float rotationY = Input.GetAxis ("Mouse Y");
 			if (sniperSight.GetSight()) {
 				rotationX *= 0.45f;
 				rotationY *= 0.45f;
@@ -110,7 +128,7 @@ public class Control : MonoBehaviour {
 			if (!isOnGround) {
 				velocityY += gravity * Time.deltaTime;
 			} else {
-				if (Input.GetKey (KeyCode.Space)) {
+				if (pressJump) {
 					velocityY = jumpVelocity;
 				} else {
 					velocityY = 0.0f;
@@ -119,22 +137,21 @@ public class Control : MonoBehaviour {
 			if (velocityY < -maxVelocityY) {
 				velocityY = -maxVelocityY;
 			}
-			bool isRunning = Input.GetKey (KeyCode.LeftShift);
 			bool isWalking = false;
-			if (Input.GetKey (KeyCode.W)) {
-				velocity.z = isRunning ? runVelocity : walkVelocity;
+			if (pressW) {
+				velocity.z = pressRun ? runVelocity : walkVelocity;
 				isWalking = true;
-			} else if (Input.GetKey (KeyCode.S)) {
-				velocity.z = -(isRunning ? runVelocity : walkVelocity);
+			} else if (pressS) {
+				velocity.z = -(pressRun ? runVelocity : walkVelocity);
 				isWalking = true;
 			} else {
 				velocity.z = 0.0f;
 			}
-			if (Input.GetKey (KeyCode.A)) {
-				velocity.x = -(isRunning ? runVelocity : walkVelocity);
+			if (pressA) {
+				velocity.x = -(pressRun ? runVelocity : walkVelocity);
 				isWalking = true;
-			} else if (Input.GetKey (KeyCode.D)) {
-				velocity.x = isRunning ? runVelocity : walkVelocity;
+			} else if (pressD) {
+				velocity.x = pressRun ? runVelocity : walkVelocity;
 				isWalking = true;
 			} else {
 				velocity.x = 0.0f;
@@ -143,7 +160,7 @@ public class Control : MonoBehaviour {
 			characterController.Move (Quaternion.Euler (transform.eulerAngles) * velocity * Time.deltaTime);
 			CharacterState characterState;
 			if (isWalking) {
-				if (isRunning) {
+				if (pressRun) {
 					characterState = CharacterState.Run;
 				} else {
 					characterState = CharacterState.Walk;
@@ -153,7 +170,7 @@ public class Control : MonoBehaviour {
 			}
 			activeGun.GetAnimator ().SetState (characterState, gunState);
 			characterSound.SetWalkingSoundState (characterState);
-			sniperSight.SetSight (activeGun == sniper && characterState != CharacterState.Run && (gunState == Gun.GunState.Fire || gunState == Gun.GunState.Idle) && Input.GetKey (KeyCode.Mouse1));
+			sniperSight.SetSight (activeGun == sniper && characterState != CharacterState.Run && (gunState == Gun.GunState.Fire || gunState == Gun.GunState.Idle) && pressSight);
 			Cursor.visible = false;
 		} else {
 			inactiveGun.GetAnimator ().SetState (CharacterState.Idle, Gun.GunState.Hide);
@@ -163,11 +180,28 @@ public class Control : MonoBehaviour {
 			recoil.Reset ();
 			Cursor.visible = true;
 		}
+		if (Input.GetButtonDown ("Pause")) {
+			HandlePauseClick ();
+		}
+		if (isPause) {
+			Cursor.visible = true;
+		}
 	}
 
 	public void GetBulletInfo(out short bulletNum, out short bulletCapacity, out short bulletOwn) {
 		bulletNum = activeGun.GetBulletNum ();
 		bulletCapacity = activeGun.bulletCapacity;
 		bulletOwn = activeGun.GetBulletOwn ();
+	}
+
+	public void HandlePauseClick() {
+		if (game.IsStart ()) {
+			isPause = !isPause;
+			if (isPause) {
+				gameUIPanel.Pause ();
+			} else {
+				gameUIPanel.Continue ();
+			}
+		}
 	}
 }

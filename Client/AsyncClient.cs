@@ -40,9 +40,14 @@ public class AsyncClient : MonoBehaviour {
 	}
 
 	private void AsyncSend(byte[] sendBuf, int size) {
-		clientSocket.BeginSend (sendBuf, 0, size, SocketFlags.None, asyncResult => {
-			clientSocket.EndSend(asyncResult);
-		}, null);
+		try {
+			clientSocket.BeginSend (sendBuf, 0, size, SocketFlags.None, asyncResult => {
+				clientSocket.EndSend(asyncResult);
+			}, null);
+		} catch (SocketException) {
+			login.RaiseSocketException ();
+			game.RaiseSocketException ();
+		}
 	}
 
 	// only called by Login.cs
@@ -79,7 +84,7 @@ public class AsyncClient : MonoBehaviour {
 	void ProcessMessage(int messageIndex) {
 		if (messageQueue[messageIndex].length == 4) { // login or register result
 			String decodeString = Encoding.ASCII.GetString (messageQueue[messageIndex].content);
-			login.GetResultFromServer (decodeString);
+			login.Synchronize (decodeString);
 		} else { // game state from server
 			if (game.IsStart () && !game.IsGameOver()) {
 				game.AppendGameStatusFromServer (messageIndex);
