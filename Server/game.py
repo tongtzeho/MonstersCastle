@@ -34,6 +34,7 @@ class game(threading.Thread): # run as a game monitor client
 		self.gameTime = 0
 		self.gameResult = 0 # 0 for playing, 1 for win, 2 for lose
 		self.level = 0
+		self.killBrute = 0
 		self.maxLevel = 5
 		self.gateMaxHp = 8000
 		self.gateHp = self.gateMaxHp
@@ -75,7 +76,8 @@ class game(threading.Thread): # run as a game monitor client
 			try:
 				self.gameTime += deltaTime
 				damageByBalls = self.updateBalls(deltaTime)
-				damageByBrute = self.brute.update(deltaTime, self.character)
+				bruteUpdateResult = self.brute.update(deltaTime, self.character)
+				self.killBrute += bruteUpdateResult[0]
 				if (self.level == 0 and self.gameTime >= self.bruteFirstBornTime) or (self.level >= 1 and self.level <= self.maxLevel - 1 and self.isBruteDead(self.bruteBornInterval, deltaTime)):
 					self.brute.reborn()
 					self.level += 1
@@ -86,11 +88,11 @@ class game(threading.Thread): # run as a game monitor client
 				elif self.level == self.maxLevel+1 and len(self.ghosts) == 0:
 					self.gameResult = 1
 				damageByGhosts = self.updateGhosts(deltaTime)
-				damageToCharacter = int(damageByBalls[0]+damageByBrute[0]+damageByGhosts[0])
+				damageToCharacter = int(damageByBalls[0]+bruteUpdateResult[1]+damageByGhosts[0])
 				if damageToCharacter > 0:
 					self.character.hp -= damageToCharacter
 					print "Character Hurt {%d}" % damageToCharacter
-				damageToGate = int(damageByBalls[1]+damageByBrute[1]+damageByGhosts[1])
+				damageToGate = int(damageByBalls[1]+bruteUpdateResult[2]+damageByGhosts[1])
 				if damageToGate > 0:
 					self.gateHp -= damageToGate
 					if self.gateHp < 0:
@@ -135,7 +137,7 @@ class game(threading.Thread): # run as a game monitor client
 	def serialize(self):
 		head = struct.pack("=4s2i16s", "^^^@", self.recog, len(self.username), self.username)
 		self.gameLock.acquire()
-		gameCurrStatus = struct.pack("=hhhh", self.gameResult, self.level, self.gateHp, self.gateMaxHp)
+		gameCurrStatus = struct.pack("=hhhhh", self.gameResult, self.killBrute, self.maxLevel, self.gateHp, self.gateMaxHp)
 		if self.gameResult != 0:
 			self.gameLock.release()
 			return head + gameCurrStatus

@@ -47,11 +47,13 @@ class brute:
 		print "Brute[%d] Die" % self.level
 		
 	def update(self, dt, character):
+		isDying = 0
 		damageToCharacter = 0
 		damageToGate = 0
 		if self.isAlive:
 			if self.hp <= 0:
 				self.die()
+				isDying = 1
 			else:
 				self.lifeTime += dt
 				if self.lifeTime <= self.rebornTime:
@@ -76,7 +78,7 @@ class brute:
 						self.action = 2
 		if self.debug:
 			self.log()
-		return [damageToCharacter, damageToGate]
+		return [isDying, damageToCharacter, damageToGate]
 		
 	def attack(self, character):
 		if self.isAlive and character.isAlive:
