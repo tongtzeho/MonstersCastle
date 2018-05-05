@@ -24,6 +24,7 @@ public class Game : MonoBehaviour {
 	public ObjectPool ballPool; // assigned in editor
 	public Control control; // assigned in editor
 	public GateUI gateUI; // assigned in editor
+	public TaskUI taskUI; // assigned in editor
 	public GameUIPanel gameUIPanel; // assigned in editor
 	public BGM gameBGM; // assigned in editor
 	public AsyncClient client; // assigned in editor
@@ -97,9 +98,10 @@ public class Game : MonoBehaviour {
 		while (recvMessageIndex.Count > 0) {
 			byte[] recvData = client.GetMessageContent (recvMessageIndex.Dequeue ());
 			gameResult = BitConverter.ToInt16 (recvData, 0);
-			//short level = BitConverter.ToInt16 (recvData, 2);
-			short gateHp = BitConverter.ToInt16 (recvData, 4);
-			short gateMaxHp = BitConverter.ToInt16 (recvData, 6);
+			short killBrute = BitConverter.ToInt16 (recvData, 2);
+			short maxLevel = BitConverter.ToInt16 (recvData, 4);
+			short gateHp = BitConverter.ToInt16 (recvData, 6);
+			short gateMaxHp = BitConverter.ToInt16 (recvData, 8);
 			if (gameResult != 0) {
 				Reset ();
 				if (gameResult == 1) {
@@ -111,7 +113,7 @@ public class Game : MonoBehaviour {
 				}
 			} else {
 				gateUI.SetGateCurrentState (gateHp, gateMaxHp);
-				int offset = 8;
+				int offset = 10;
 
 				short characterDataLen = BitConverter.ToInt16 (recvData, offset);
 				character.Synchronize (gameState == GameState.Init, recvData, offset + 2);
@@ -153,6 +155,8 @@ public class Game : MonoBehaviour {
 				offset += 4 + ballDataSize * ballDataByte;
 
 				gameState = GameState.Run;
+
+				taskUI.SetCurrentState (ghostDataSize, killBrute, maxLevel, gateHp);
 			}
 		}
 	}

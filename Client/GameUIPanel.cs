@@ -9,6 +9,7 @@ public class GameUIPanel : MonoBehaviour {
 	public GameObject playerInfo;
 	public GameObject victory;
 	public GameObject defeat;
+	public RectTransform task;
 	public RectTransform pause;
 	public UnityEngine.UI.Text socketException;
 	public Game game;
@@ -24,6 +25,7 @@ public class GameUIPanel : MonoBehaviour {
 		playerInfo.SetActive (false);
 		victory.SetActive (false);
 		defeat.SetActive (false);
+		ShowTask (false);
 		pause.localPosition = disablePosition;
 	}
 
@@ -32,6 +34,7 @@ public class GameUIPanel : MonoBehaviour {
 		playerInfo.SetActive (true);
 		victory.SetActive (false);
 		defeat.SetActive (false);
+		ShowTask (false);
 		pause.localPosition = disablePosition;
 	}
 
@@ -40,6 +43,7 @@ public class GameUIPanel : MonoBehaviour {
 		playerInfo.SetActive (false);
 		victory.SetActive (true);
 		defeat.SetActive (false);
+		ShowTask (false);
 		pause.localPosition = disablePosition;
 	}
 
@@ -48,6 +52,7 @@ public class GameUIPanel : MonoBehaviour {
 		playerInfo.SetActive (false);
 		victory.SetActive (false);
 		defeat.SetActive (true);
+		ShowTask (false);
 		pause.localPosition = disablePosition;
 	}
 
@@ -77,5 +82,9 @@ public class GameUIPanel : MonoBehaviour {
 
 	public void Continue() {
 		pause.localPosition = disablePosition;
+	}
+
+	public void ShowTask(bool show) {
+		task.localPosition = show ? Vector3.zero : disablePosition;
 	}
 }

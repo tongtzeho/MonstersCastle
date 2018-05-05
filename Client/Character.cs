@@ -15,6 +15,7 @@ public class Character : MonoBehaviour {
 	public short upHpLeft = 0;
 	private Control control;
 	private CharacterSound characterSound;
+	private FadeImage hurt;
 	private Vector3 defaultPosition;
 	private BGM gameBGM;
 
@@ -25,6 +26,7 @@ public class Character : MonoBehaviour {
 	void Start() {
 		control = GetComponent<Control> ();
 		characterSound = GetComponent<CharacterSound> ();
+		hurt = GameObject.Find ("Hurt").GetComponent<FadeImage> ();
 		gameBGM = GameObject.Find ("Game").GetComponent<BGM> ();
 	}
 
@@ -76,6 +78,7 @@ public class Character : MonoBehaviour {
 		short currHp = BitConverter.ToInt16 (recvData, beginIndex + 6);
 		if (currHp < hp && !gameInitializing) {
 			characterSound.PlayHurtSound ();
+			hurt.Activate ();
 		}
 		hp = currHp;
 		if (gameInitializing) {

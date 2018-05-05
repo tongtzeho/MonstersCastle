@@ -13,7 +13,7 @@ public class Bullet : IPoolObject {
 	private short currQuery = 0;
 	private float distSqrThreshold = 1;
 	private Vector3 resetPos = new Vector3(0, -50, 0);
-	private float minY = -0.45f; // avoid sinking under water
+	private float minY = -0.42f; // avoid sinking under water
 
 	void Start () {
 		character = GameObject.Find ("Character").transform;

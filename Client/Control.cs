@@ -186,6 +186,7 @@ public class Control : MonoBehaviour {
 		if (isPause) {
 			Cursor.visible = true;
 		}
+		gameUIPanel.ShowTask (game.IsStart () && Input.GetKey (KeyCode.Tab));
 	}
 
 	public void GetBulletInfo(out short bulletNum, out short bulletCapacity, out short bulletOwn) {
