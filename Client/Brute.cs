@@ -15,6 +15,7 @@ public class Brute : MonoBehaviour {
 	private float attackCurrTime = 0;
 	private ParticleSystem attackParticleSystem;
 	private AudioSource attackSound;
+	public AudioSource rebornSound; // assigned in editor
 	public AudioSource hurtSound; // assigned in editor
 	public AudioSource dieSound; // assigned in editor
 	private bool setAttackAction = false;
@@ -49,6 +50,9 @@ public class Brute : MonoBehaviour {
 		if (gameInitializing || isReborn) {
 			monster.hp = BitConverter.ToInt16 (recvData, beginIndex + 4);
 			monster.maxHp = BitConverter.ToInt16 (recvData, beginIndex + 6);
+		}
+		if (!gameInitializing && isReborn) {
+			rebornSound.Play ();
 		}
 		if (isAlive == 1) {
 			transform.position = new Vector3 (BitConverter.ToSingle (recvData, beginIndex + 8), BitConverter.ToSingle (recvData, beginIndex + 12), BitConverter.ToSingle (recvData, beginIndex + 16));

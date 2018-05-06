@@ -78,7 +78,7 @@ public class Character : MonoBehaviour {
 		short currHp = BitConverter.ToInt16 (recvData, beginIndex + 6);
 		if (currHp < hp && !gameInitializing) {
 			characterSound.PlayHurtSound ();
-			hurt.Activate ();
+			hurt.Activate (0.08f * (hp - currHp));
 		}
 		hp = currHp;
 		if (gameInitializing) {

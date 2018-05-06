@@ -25,4 +25,10 @@ public class FadeImage : MonoBehaviour {
 	public void Activate() {
 		image.color = new Color (1.0f, 1.0f, 1.0f, fullAlpha);
 	}
+
+	public void Activate(float alpha) {
+		if (image.color.a < alpha) {
+			image.color = new Color (1.0f, 1.0f, 1.0f, Mathf.Min (1.0f, alpha));
+		}
+	}
 }

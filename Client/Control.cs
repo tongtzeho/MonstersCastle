@@ -16,8 +16,9 @@ public class Control : MonoBehaviour {
 	private float velocityY = 0.0f;
 	private const float gravity = -9.8f;
 	private const float maxVelocityY = 30.0f;
-	private const float walkVelocity = 2.5f;
-	private const float runVelocity = 5.5f;
+	private const float walkScalarVelocity = 2.5f;
+	private const float runScalarVelocityMultiple = 2.2f;
+	private const float unforwardMultiple = 0.75f;
 	private const float jumpVelocity = 4.5f;
 	private Gun activeGun;
 	private Gun inactiveGun;
@@ -30,6 +31,25 @@ public class Control : MonoBehaviour {
 	private Game game;
 	private GameUIPanel gameUIPanel;
 	private bool isPause = false;
+
+	// 9 directions
+	// 0 1 2
+	// 3 4 5
+	// 6 7 8
+	private Vector3[] walkVelocity;
+
+	void Awake() {
+		walkVelocity = new Vector3[9];
+		walkVelocity [0] = new Vector3 (-1, 0, 1) * walkScalarVelocity * (1 + unforwardMultiple) * 0.5f * 0.707106781187f;
+		walkVelocity [1] = new Vector3 (0, 0, 1) * walkScalarVelocity;
+		walkVelocity [2] = new Vector3 (1, 0, 1) * walkScalarVelocity * (1 + unforwardMultiple) * 0.5f * 0.707106781187f;
+		walkVelocity [3] = new Vector3 (-1, 0, 0) * walkScalarVelocity * unforwardMultiple;
+		walkVelocity [4] = Vector3.zero;
+		walkVelocity [5] = new Vector3 (1, 0, 0) * walkScalarVelocity * unforwardMultiple;
+		walkVelocity [6] = new Vector3 (-1, 0, -1) * walkScalarVelocity * unforwardMultiple * 0.707106781187f;
+		walkVelocity [7] = new Vector3 (0, 0, -1) * walkScalarVelocity * unforwardMultiple;
+		walkVelocity [8] = new Vector3 (1, 0, -1) * walkScalarVelocity * unforwardMultiple * 0.707106781187f;
+	}
 
 	void Start () {
 		characterController = GetComponent<CharacterController> ();
@@ -137,25 +157,33 @@ public class Control : MonoBehaviour {
 			if (velocityY < -maxVelocityY) {
 				velocityY = -maxVelocityY;
 			}
-			bool isWalking = false;
-			if (pressW) {
-				velocity.z = pressRun ? runVelocity : walkVelocity;
-				isWalking = true;
-			} else if (pressS) {
-				velocity.z = -(pressRun ? runVelocity : walkVelocity);
-				isWalking = true;
+			int direction = 4;
+			if (pressW && !pressS) {
+				if (pressA && !pressD) {
+					direction = 0;
+				} else if (pressD && !pressA) {
+					direction = 2;
+				} else {
+					direction = 1;
+				}
+			} else if (pressS && !pressW) {
+				if (pressA && !pressD) {
+					direction = 6;
+				} else if (pressD && !pressA) {
+					direction = 8;
+				} else {
+					direction = 7;
+				}
 			} else {
-				velocity.z = 0.0f;
+				if (pressA && !pressD) {
+					direction = 3;
+				} else if (pressD && !pressA) {
+					direction = 5;
+				}
 			}
-			if (pressA) {
-				velocity.x = -(pressRun ? runVelocity : walkVelocity);
-				isWalking = true;
-			} else if (pressD) {
-				velocity.x = pressRun ? runVelocity : walkVelocity;
-				isWalking = true;
-			} else {
-				velocity.x = 0.0f;
-			}
+			bool isWalking = direction != 4;
+			velocity.x = pressRun ? runScalarVelocityMultiple * walkVelocity [direction].x : walkVelocity [direction].x;
+			velocity.z = pressRun ? runScalarVelocityMultiple * walkVelocity [direction].z : walkVelocity [direction].z;
 			velocity.y = velocityY;
 			characterController.Move (Quaternion.Euler (transform.eulerAngles) * velocity * Time.deltaTime);
 			CharacterState characterState;
