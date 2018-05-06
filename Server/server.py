@@ -1,7 +1,7 @@
 # Monsters Castle Socket Server
 # Python 2.7.14
 
-import socket, select, os, time, json, struct
+import socket, select, os, time, json, struct, hashlib
 import game, msg, scene
 
 CONNECTION_LIST = [] # Read sockets
@@ -40,7 +40,9 @@ def createNewGame(username):
 
 def fetchUsernamePassword(data):
 	wordArr = data.split(' ')
-	return wordArr[1], wordArr[2]
+	md5 = hashlib.md5()
+	md5.update(wordArr[2])
+	return wordArr[1], md5.hexdigest()
 
 def login(sock, username, password):
 	if username in USER_DATABASE:
