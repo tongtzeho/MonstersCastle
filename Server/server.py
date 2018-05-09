@@ -162,7 +162,6 @@ if __name__ == "__main__":
 				except:
 					logout(CONNECTION_USERS[sock])
 					try:
-						print ("Close a socket")
 						sock.close()
 					except:
 						pass
