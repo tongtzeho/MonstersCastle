@@ -147,12 +147,12 @@ public class Login : MonoBehaviour {
 		} else if (!IsValidPassword (registerPassword.text)) {
 			registerHint.text = "无效的密码";
 		} else {
-			client.SendString (string.Concat ("$su ", registerUsername.text, " ", md5.Encrypt (loginPassword.text)));
+			client.SendString (string.Concat ("$su ", registerUsername.text, " ", md5.Encrypt (registerPassword.text)));
 		}
 	}
 
 	public void OnPostRegisterPanelEnterClick() {
-		client.SendString (string.Concat ("$si ", registerUsername.text, " ", md5.Encrypt (loginPassword.text)));
+		client.SendString (string.Concat ("$si ", registerUsername.text, " ", md5.Encrypt (registerPassword.text)));
 	}
 
 	public void OnBackClick() {
